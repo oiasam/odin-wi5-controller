@@ -1,5 +1,8 @@
 package net.floodlightcontroller.odin.master;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -54,7 +57,7 @@ class OdinAgent implements IOdinAgent {
 	private final int RX_STAT_NUM_PROPERTIES = 5;
 	private final int ODIN_AGENT_PORT = 6777;
 
-
+	protected static Logger log = LoggerFactory.getLogger(OdinAgent.class);
 	/**
 	 * Probably need a better identifier
 	 *
@@ -226,7 +229,8 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("in_port=1,dl_type=0x0800");
+			//match.fromString("in_port=1,dl_type=0x0800");
+			match.fromString("in_port=1");
 
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort((short) 2);
@@ -246,7 +250,8 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow2 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("in_port=2,dl_type=0x0800");
+			//match.fromString("in_port=2,dl_type=0x0800");
+			match.fromString("in_port=2");
 
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort((short) 1);
@@ -264,10 +269,12 @@ class OdinAgent implements IOdinAgent {
 		}
 
 		try {
+			log.info("Trying to add flows to xDPd");
 			ofSwitch.write(flow1, null);
 			ofSwitch.write(flow2, null);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
+			log.error("Failed to add flows to xDPd");
 			e1.printStackTrace();
 		}
 
