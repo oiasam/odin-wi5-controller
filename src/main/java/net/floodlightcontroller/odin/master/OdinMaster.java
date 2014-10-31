@@ -861,13 +861,14 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
         IPacket p3 = p2.getPayload(); // Application
         if ((p3 != null) && (p3 instanceof DHCP)) {
-					log.info("*** PKT_IN_DHCP ***");
 
         	DHCP packet = (DHCP) p3;
         	try {
 
         		final MACAddress clientHwAddr = MACAddress.valueOf(packet.getClientHardwareAddress());
         		final OdinClient oc = clientManager.getClients().get(clientHwAddr);
+
+						log.info("*** PKT_IN_DHCP: MAC ADDR --> " + clientHwAddr + "***");
 
     			// Don't bother if we're not tracking the client
         		// or if the client is unassociated with the agent
