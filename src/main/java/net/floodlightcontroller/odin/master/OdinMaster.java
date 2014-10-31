@@ -868,7 +868,6 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
         		final MACAddress clientHwAddr = MACAddress.valueOf(packet.getClientHardwareAddress());
         		final OdinClient oc = clientManager.getClients().get(clientHwAddr);
 
-			log.info("*** PKT_IN_DHCP: MAC ADDR --> " + clientHwAddr + " ***");
 
     			// Don't bother if we're not tracking the client
         		// or if the client is unassociated with the agent
@@ -876,6 +875,8 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
         		if (oc == null || oc.getLvap().getAgent() == null || oc.getLvap().getAgent().getSwitch() == null) {
         			return Command.CONTINUE;
         		}
+
+				log.info("*** PKT_IN_DHCP: MAC ADDR --> " + oc + " ***");
 
         		// Look for the Your-IP field in the DHCP packet
         		if (packet.getYourIPAddress() != 0) {
