@@ -217,7 +217,7 @@ class OdinAgent implements IOdinAgent {
 			actionList.add(actionOutput);
 
 			flow3.setCookie(67);
-			flow3.setPriority((short) 100);
+			flow3.setPriority((short) 300);
 			flow3.setMatch(match);
 			flow3.setIdleTimeout((short) 0);
 			flow3.setActions(actionList);
