@@ -216,12 +216,12 @@ class OdinAgent implements IOdinAgent {
 			List<OFAction> actionList = new ArrayList<OFAction>();
 			actionList.add(actionOutput);
 
-			flow2.setCookie(67);
-			flow2.setPriority((short) 100);
-			flow2.setMatch(match);
-			flow2.setIdleTimeout((short) 0);
-			flow2.setActions(actionList);
-	        flow2.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
+			flow3.setCookie(67);
+			flow3.setPriority((short) 100);
+			flow3.setMatch(match);
+			flow3.setIdleTimeout((short) 0);
+			flow3.setActions(actionList);
+	        flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
 		}
 
 		OFFlowMod flow1 = new OFFlowMod();
