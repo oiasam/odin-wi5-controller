@@ -870,7 +870,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
         		final OdinClient oc = clientManager.getClients().get(clientHwAddr);
 
 				log.info("[DHCP] pkt in for a station with MAC addr --> " + clientHwAddr);
-				log.info("[DHCP] oc --> " + oc);
+				log.info("[DHCP] oc --> " + oc.getMacAddress());
 
     			// Don't bother if we're not tracking the client
         		// or if the client is unassociated with the agent
