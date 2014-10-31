@@ -847,7 +847,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
 		// We use this to pick up DHCP response frames
 		// and update a client's IP address details accordingly
-
+		log.info("*** PKT_IN ***");
 		Ethernet frame = IFloodlightProviderService.bcStore.get(cntx,
                 IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 
