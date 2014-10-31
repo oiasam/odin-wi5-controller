@@ -192,7 +192,6 @@ class OdinAgent implements IOdinAgent {
 		return Collections.unmodifiableMap(ret);
 	}
 
-
 	/**
 	 * To be called only once, initialises a connection to the OdinAgent's
 	 * control socket. We let the connection persist so as to save on
@@ -229,9 +228,9 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("in_port=1,dl_type=0x0800");
+			//match.fromString("in_port=1,dl_type=0x0800");
 			//match.fromString("in_port=1, dl_type=0x0800,nw_proto=17,tp_dst=68"); //port 68 used by DHCP client, 67 by server
-			//match.fromString("in_port=1");
+			match.fromString("in_port=1");
 
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort((short) 2);
@@ -251,9 +250,9 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow2 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("in_port=2,dl_type=0x0800");
+			//match.fromString("in_port=2,dl_type=0x0800");
 			//match.fromString("in_port=2, dl_type=0x0800,nw_proto=17,tp_dst=67"); //port 68 used by DHCP client, 67 by server
-			//match.fromString("in_port=2");
+			match.fromString("in_port=2");
 
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort((short) 1);
