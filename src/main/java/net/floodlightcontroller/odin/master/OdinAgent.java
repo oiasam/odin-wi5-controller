@@ -207,7 +207,7 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow3 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("dl_type=0x0800,nw_proto=17");
+			match.fromString("dl_type=0x0800,nw_proto=17,tp_dst=67");
 
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort(OFPort.OFPP_CONTROLLER.getValue());
