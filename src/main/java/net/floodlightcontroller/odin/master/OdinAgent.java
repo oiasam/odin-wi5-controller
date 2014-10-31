@@ -207,23 +207,21 @@ class OdinAgent implements IOdinAgent {
 		OFFlowMod flow3 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
-			match.fromString("dl_type=0x0800,nw_proto=17,tp_dst=67");
-
+			match.fromString("dl_type=0x0800,nw_proto=17,tp_dst=68");
 			OFActionOutput actionOutput = new OFActionOutput ();
 			actionOutput.setPort(OFPort.OFPP_CONTROLLER.getValue());
 			actionOutput.setLength((short) OFActionOutput.MINIMUM_LENGTH);
-
 			List<OFAction> actionList = new ArrayList<OFAction>();
 			actionList.add(actionOutput);
-
 			flow3.setCookie(67);
 			flow3.setPriority((short) 300);
 			flow3.setMatch(match);
 			flow3.setIdleTimeout((short) 0);
 			flow3.setActions(actionList);
-	        flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
+			flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
 		}
 
+		/*
 		OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
@@ -266,13 +264,13 @@ class OdinAgent implements IOdinAgent {
 			flow2.setIdleTimeout((short) 0);
 			flow2.setActions(actionList);
 			flow2.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
-		}
+		}*/
 
 		try {
 			log.info("Trying to add flows to xDPd");
 			ofSwitch.write(flow3, null);
-			ofSwitch.write(flow1, null);
-			ofSwitch.write(flow2, null);
+			//ofSwitch.write(flow1, null);
+			//ofSwitch.write(flow2, null);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			log.error("Failed to add flows to xDPd");

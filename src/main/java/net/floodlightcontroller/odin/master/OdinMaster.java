@@ -865,8 +865,6 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
         	DHCP packet = (DHCP) p3;
 
-			log.info("DHCP pkt -> " + packet);
-
         	try {
 
         		final MACAddress clientHwAddr = MACAddress.valueOf(packet.getClientHardwareAddress());
