@@ -876,7 +876,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
         			return Command.CONTINUE;
         		}
 
-				log.info("*** PKT_IN_DHCP: MAC ADDR --> " + oc + " ***");
+				log.info("*** PKT_IN_DHCP: MAC ADDR --> " + clientHwAddr + " ***");
 
         		// Look for the Your-IP field in the DHCP packet
         		if (packet.getYourIPAddress() != 0) {
