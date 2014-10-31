@@ -197,6 +197,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 						e.printStackTrace();
 					}
 		    		clientManager.addClient(oc);
+					log.info("Client added: " + oc.getMacAddress());
 		    	}
 
 		    	Lvap lvap = oc.getLvap();
@@ -870,7 +871,6 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
 				log.info("[DHCP] pkt in for a station with MAC addr --> " + clientHwAddr);
 				log.info("[DHCP] oc --> " + oc);
-
 
     			// Don't bother if we're not tracking the client
         		// or if the client is unassociated with the agent
