@@ -204,6 +204,7 @@ class OdinAgent implements IOdinAgent {
 	 */
 	public int init(InetAddress host) {
 
+		/*
 		OFFlowMod flow3 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
@@ -219,9 +220,9 @@ class OdinAgent implements IOdinAgent {
 			flow3.setIdleTimeout((short) 0);
 			flow3.setActions(actionList);
 			flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
-		}
+		}*/
 
-		/*
+
 		OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
@@ -264,13 +265,13 @@ class OdinAgent implements IOdinAgent {
 			flow2.setIdleTimeout((short) 0);
 			flow2.setActions(actionList);
 			flow2.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
-		}*/
+		}
 
 		try {
 			log.info("Trying to add flows to xDPd");
-			ofSwitch.write(flow3, null);
-			//ofSwitch.write(flow1, null);
-			//ofSwitch.write(flow2, null);
+			//ofSwitch.write(flow3, null);
+			ofSwitch.write(flow1, null);
+			ofSwitch.write(flow2, null);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			log.error("Failed to add flows to xDPd");
