@@ -26,7 +26,7 @@ public class OdinMobilityManager extends OdinApplication {
 	public OdinMobilityManager () {
 		this.HYSTERESIS_THRESHOLD = 3000;
 		this.IDLE_CLIENT_THRESHOLD = 4000;
-		this.SIGNAL_STRENGTH_THRESHOLD = 40;
+		this.SIGNAL_STRENGTH_THRESHOLD = 35;
 	}
 
 	// Used for testing
@@ -40,7 +40,7 @@ public class OdinMobilityManager extends OdinApplication {
 	 * Register subscriptions
 	 */
 	private void init () {
-		log.info("*** OdinMobilityManager initialized ***");
+//		log.info("*** OdinMobilityManager initialized ***");
 		OdinEventSubscription oes = new OdinEventSubscription();
 		//oes.setSubscription("00:0B:6B:84:B2:87", "signal", Relation.GREATER_THAN, 160); //MAC of..?
 		oes.setSubscription("*", "signal", Relation.GREATER_THAN, 160); //STA = LENOVO T500
@@ -78,8 +78,8 @@ public class OdinMobilityManager extends OdinApplication {
 		if (client == null)
 			return;
 
-		log.debug("Mobility manager: notification from " + cntx.clientHwAddress
-			+ " from agent " + cntx.agent.getIpAddress() + " val: " + cntx.value + " at " + System.currentTimeMillis());
+//		log.debug("Mobility manager: notification from " + cntx.clientHwAddress
+//			+ " from agent " + cntx.agent.getIpAddress() + " val: " + cntx.value + " at " + System.currentTimeMillis());
 
 		long currentTimestamp = System.currentTimeMillis();
 
@@ -92,7 +92,7 @@ public class OdinMobilityManager extends OdinApplication {
 
 		// If client hasn't been assigned an agent, do so
 		if (client.getLvap().getAgent() == null) {
-			log.info("Mobility manager: handing off client " + cntx.clientHwAddress
+			log.info("Mobility manager: client hasn't been asigned an agent: handing off client " + cntx.clientHwAddress
 									+ " to agent " + cntx.agent.getIpAddress() + " at " + System.currentTimeMillis());
 			handoffClientToAp(cntx.clientHwAddress, cntx.agent.getIpAddress());
 			updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
@@ -101,7 +101,7 @@ public class OdinMobilityManager extends OdinApplication {
 
 		// Check for out-of-range client
 		if ((currentTimestamp - stats.lastHeard) > IDLE_CLIENT_THRESHOLD) {
-			log.info("Mobility manager: handing off client " + cntx.clientHwAddress
+			log.info("Mobility manager: out of range client: handing off client " + cntx.clientHwAddress
 					+ " to agent " + cntx.agent.getIpAddress() + " at " + System.currentTimeMillis());
 			handoffClientToAp(cntx.clientHwAddress, cntx.agent.getIpAddress());
 			updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
@@ -121,7 +121,7 @@ public class OdinMobilityManager extends OdinApplication {
 
 			// We're outside the hysteresis period, so compare signal strengths for a handoff
 			if (cntx.value >= stats.signalStrength + SIGNAL_STRENGTH_THRESHOLD) {
-				log.info("Mobility manager: handing off client " + cntx.clientHwAddress
+				log.info("Mobility manager: comparing signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + 40 :" + "handing off client " + cntx.clientHwAddress
 						+ " to agent " + cntx.agent.getIpAddress() + " at " + System.currentTimeMillis());
 				handoffClientToAp(cntx.clientHwAddress, cntx.agent.getIpAddress());
 				updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
