@@ -24,9 +24,9 @@ public class OdinMobilityManager extends OdinApplication {
 	private final long SIGNAL_STRENGTH_THRESHOLD; // dbm
 
 	public OdinMobilityManager () {
-		this.HYSTERESIS_THRESHOLD = 3000;
+		this.HYSTERESIS_THRESHOLD = 2000;
 		this.IDLE_CLIENT_THRESHOLD = 4000;
-		this.SIGNAL_STRENGTH_THRESHOLD = 35;
+		this.SIGNAL_STRENGTH_THRESHOLD = 20;
 	}
 
 	// Used for testing
@@ -43,7 +43,7 @@ public class OdinMobilityManager extends OdinApplication {
 //		log.info("*** OdinMobilityManager initialized ***");
 		OdinEventSubscription oes = new OdinEventSubscription();
 		//oes.setSubscription("00:0B:6B:84:B2:87", "signal", Relation.GREATER_THAN, 160); //MAC of..?
-		oes.setSubscription("*", "signal", Relation.GREATER_THAN, 160); //STA = LENOVO T500
+		oes.setSubscription("*", "signal", Relation.GREATER_THAN, 160);
 
 		NotificationCallback cb = new NotificationCallback() {
 
@@ -121,7 +121,7 @@ public class OdinMobilityManager extends OdinApplication {
 
 			// We're outside the hysteresis period, so compare signal strengths for a handoff
 			if (cntx.value >= stats.signalStrength + SIGNAL_STRENGTH_THRESHOLD) {
-				log.info("Mobility manager: comparing signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + 40 :" + "handing off client " + cntx.clientHwAddress
+				log.info("Mobility manager: comparing signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + " + SIGNAL_STRENGTH_THRESHOLD + " :" + "handing off client " + cntx.clientHwAddress
 						+ " to agent " + cntx.agent.getIpAddress() + " at " + System.currentTimeMillis());
 				handoffClientToAp(cntx.clientHwAddress, cntx.agent.getIpAddress());
 				updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
