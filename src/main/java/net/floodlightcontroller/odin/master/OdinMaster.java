@@ -131,6 +131,25 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 		}
 	}
 
+	synchronized void receiveDeauth (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+
+		if (clientHwAddress == null || odinAgentAddr == null)
+			return;
+
+		IOdinAgent agent = agentManager.getAgent(odinAgentAddr);
+		OdinClient oc = clientManager.getClient(clientHwAddress);
+
+		if(agent == null)
+			return;
+
+		log.info("Clearing Lvap " + clientHwAddress +
+		" from agent:" + agent.getIpAddress() + " due to deauthentication");
+		poolManager.removeClientPoolMapping(oc);
+		agent.removeClientLvap(oc);
+		clientManager.removeClient(clientHwAddress);
+
+	}
+
 	/**
 	 * Handle a probe message from an agent, triggered
 	 * by a particular client.
