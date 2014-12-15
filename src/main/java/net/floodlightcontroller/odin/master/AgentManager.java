@@ -231,7 +231,7 @@ class AgentManager {
 
 		@Override
 		public void run() {
-			log.info("Executing failure check against: " + agent.getIpAddress());
+			//log.info("Executing failure check against: " + agent.getIpAddress());
 			if ((System.currentTimeMillis() - agent.getLastHeard()) >= agentTimeout) {
 				log.error("Agent: " + agent.getIpAddress() + " has timed out");
 
