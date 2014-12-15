@@ -143,7 +143,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 			return;
 
 		log.info("Clearing Lvap " + clientHwAddress +
-		" from agent:" + agent.getIpAddress() + " due to deauthentication");
+		" from agent:" + agent.getIpAddress() + " due to deauthentication/inactivity");
 		poolManager.removeClientPoolMapping(oc);
 		agent.removeClientLvap(oc);
 		clientManager.removeClient(clientHwAddress);
