@@ -101,6 +101,8 @@ public class OdinMobilityManager extends OdinApplication {
 
 		// Check for out-of-range client
 		if ((currentTimestamp - stats.lastHeard) > IDLE_CLIENT_THRESHOLD) {
+			if(client.getLvap().getAgent().getIpAddress() == cntx.agent.getIpAddress())
+				return;
 			log.info("Mobility manager: out of range client: handing off client " + cntx.clientHwAddress
 					+ " to agent " + cntx.agent.getIpAddress() + " at " + System.currentTimeMillis());
 			handoffClientToAp(cntx.clientHwAddress, cntx.agent.getIpAddress());
