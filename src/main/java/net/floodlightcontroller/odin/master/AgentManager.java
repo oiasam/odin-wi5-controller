@@ -31,8 +31,6 @@ class AgentManager {
 	private final Timer failureDetectionTimer = new Timer();
 	private int agentTimeout = 6000;
 
-	private boolean ping_print_once = false; //for printing ping only once
-
 	protected AgentManager (ClientManager clientManager, PoolManager poolManager) {
 		this.clientManager = clientManager;
 		this.poolManager = poolManager;
@@ -103,8 +101,9 @@ class AgentManager {
      */
 	protected boolean receivePing(final InetAddress odinAgentAddr) {
 
-		if (!ping_print_once) {
-			ping_print_once = true;
+		//if we receive a ping from a new agent
+		if (!isTracked (odinAgentAddr)) {
+
 			log.info("Ping message from: " + odinAgentAddr);
 
 		};

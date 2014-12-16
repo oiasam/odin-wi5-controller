@@ -26,7 +26,7 @@ public class OdinMobilityManager extends OdinApplication {
 	public OdinMobilityManager () {
 		this.HYSTERESIS_THRESHOLD = 2000;
 		this.IDLE_CLIENT_THRESHOLD = 6000;
-		this.SIGNAL_STRENGTH_THRESHOLD = 20;
+		this.SIGNAL_STRENGTH_THRESHOLD = 27;
 	}
 
 	// Used for testing
