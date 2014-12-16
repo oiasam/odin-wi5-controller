@@ -64,7 +64,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
 	private long subscriptionId = 0;
 	private String subscriptionList = "";
-	private int idleLvapTimeout = 100; // Seconds
+	private int idleLvapTimeout = 60; // Seconds
 
 	private final ConcurrentMap<Long, SubscriptionCallbackTuple> subscriptions = new ConcurrentHashMap<Long, SubscriptionCallbackTuple>();
 
@@ -147,6 +147,28 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 		poolManager.removeClientPoolMapping(oc);
 		agent.removeClientLvap(oc);
 		clientManager.removeClient(clientHwAddress);
+
+	}
+
+	/* This method stops the timer that clears the lvap if an IP is not received for the client */
+	synchronized void receiveAssoc (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+
+		if (clientHwAddress == null || odinAgentAddr == null)
+			return;
+
+		IOdinAgent agent = agentManager.getAgent(odinAgentAddr);
+
+		if(agent == null)
+			return;
+
+		log.info("Client " + clientHwAddress + " completed the association");
+
+		OdinClient oc = clientManager.getClient(clientHwAddress);
+		oc.getLvap().setAssocState(true); //associated;
+
+		//poolManager.removeClientPoolMapping(oc);
+		//agent.removeClientLvap(oc);
+		//clientManager.removeClient(clientHwAddress);
 
 	}
 
@@ -860,6 +882,13 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 		agentManager.removeAgent(switchIpAddr);
 	}
 
+
+	@Override
+	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
+		return Command.CONTINUE;
+	}
+
+	/*
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
 
@@ -929,6 +958,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
 		return Command.CONTINUE;
 	}
+	*/
 
 	@Override
 	public boolean isCallbackOrderingPostreq(OFType type, String name) {
@@ -1022,22 +1052,42 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 				return;
 			}
 
+			// Client didn't follow through to connect - no assoc message received in the master
+
+			if(client.getLvap().getAssocState() == false){
+				IOdinAgent agent = client.getLvap().getAgent();
+
+				if (agent != null) {
+					log.info("Clearing Lvap " + client.getMacAddress() +
+							" from agent:" + agent.getIpAddress() + " due to association not completed");
+					poolManager.removeClientPoolMapping(client);
+					agent.removeClientLvap(client);
+					clientManager.removeClient(client.getMacAddress());
+				}
+
+			 }else{
+					//log.info("Association state of client " + client.getMacAddress() + " is " + client.getLvap().getAssocState());
+			 }
+
+/* Original code
 			// Client didn't follow through to connect
 			try {
 				if (client.getIpAddress().equals(InetAddress.getByName("0.0.0.0"))) {
 					IOdinAgent agent = client.getLvap().getAgent();
 
 					if (agent != null) {
-						log.info("Clearing Lvap " + client.getMacAddress() +
-								" from agent:" + agent.getIpAddress() + " due to inactivity");
-						poolManager.removeClientPoolMapping(client);
-						agent.removeClientLvap(client);
-						clientManager.removeClient(client.getMacAddress());
+						//log.info("Clearing Lvap " + client.getMacAddress() +
+						//		" from agent:" + agent.getIpAddress() + " due to inactivity");
+						//poolManager.removeClientPoolMapping(client);
+						//agent.removeClientLvap(client);
+						//clientManager.removeClient(client.getMacAddress());
 					}
 				}
+
 			} catch (UnknownHostException e) {
 				// skip
 			}
+*/
 		}
 	}
 

@@ -206,7 +206,7 @@ class OdinAgent implements IOdinAgent {
 	 * @return 0 on success, -1 otherwise
 	 */
 	public int init(InetAddress host) {
-		
+
 		OFFlowMod flow3 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
@@ -228,7 +228,7 @@ class OdinAgent implements IOdinAgent {
 			flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
 		}
 
-		
+
 		OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
@@ -274,15 +274,15 @@ class OdinAgent implements IOdinAgent {
 		}
 
 
-		try {
-//			ofSwitch.write(flow1, null);
-//			ofSwitch.write(flow2, null);
-			ofSwitch.write(flow3, null);
+		/*try {
+			//ofSwitch.write(flow1, null);
+			//ofSwitch.write(flow2, null);
+			//ofSwitch.write(flow3, null);
 
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 
 		try {
 			odinAgentSocket = new Socket(host.getHostAddress(), ODIN_AGENT_PORT);
