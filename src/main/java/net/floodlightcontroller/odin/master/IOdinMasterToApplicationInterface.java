@@ -7,7 +7,7 @@ import java.util.Set;
 import net.floodlightcontroller.odin.master.OdinClient;
 import net.floodlightcontroller.util.MACAddress;
 
-interface IOdinApplicationInterface {
+interface IOdinMasterToApplicationInterface {
 
 	/**
 	 * VAP-Handoff a client to a new AP. This operation is idempotent.

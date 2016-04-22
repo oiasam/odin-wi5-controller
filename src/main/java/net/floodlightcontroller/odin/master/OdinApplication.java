@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import net.floodlightcontroller.odin.master.IOdinApplicationInterface;
+import net.floodlightcontroller.odin.master.IOdinMasterToApplicationInterface;
 import net.floodlightcontroller.odin.master.NotificationCallback;
 import net.floodlightcontroller.odin.master.OdinClient;
 import net.floodlightcontroller.odin.master.OdinEventSubscription;
@@ -20,14 +20,14 @@ import net.floodlightcontroller.util.MACAddress;
  */
 public abstract class OdinApplication implements Runnable {
 
-	private IOdinApplicationInterface odinApplicationInterface;
+	private IOdinMasterToApplicationInterface odinApplicationInterface;
 	private String pool;
 	
 	
 	/**
 	 * Set the OdinMaster to use
 	 */
-	final void setOdinInterface (IOdinApplicationInterface om) {
+	final void setOdinInterface (IOdinMasterToApplicationInterface om) {
 		odinApplicationInterface = om;
 	}
 	

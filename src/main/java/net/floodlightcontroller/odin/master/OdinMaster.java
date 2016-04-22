@@ -50,7 +50,7 @@ import net.floodlightcontroller.util.MACAddress;
  * @author Lalith Suresh <suresh.lalith@gmail.com>
  *
  */
-public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinApplicationInterface, IOFMessageListener, IFloodlightService {
+public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMasterToApplicationInterface, IOFMessageListener, IFloodlightService {
 	protected static Logger log = LoggerFactory.getLogger(OdinMaster.class);
 	protected IRestApiService restApi;
 
@@ -883,12 +883,12 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 	}
 
 
-	@Override
+	/*@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
 		return Command.CONTINUE;
-	}
+	}*/
 
-	/*
+	
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
 
@@ -939,14 +939,14 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
         			log.info("Updating client: " + clientHwAddr + " with ipAddr: " + yourIp);
         			oc.setIpAddress(yourIp);
-        			oc.getLvap().setOFMessageList(lvapManager.getDefaultOFModList(yourIp));
+        		  /*oc.getLvap().setOFMessageList(lvapManager.getDefaultOFModList(yourIp)); //Commented because of Learning switch (Uncomment for SDN branch)
 
         			// Push flow messages associated with the client
         			try {
         				oc.getLvap().getAgent().getSwitch().write(oc.getLvap().getOFMessageList(), null);
         			} catch (IOException e) {
         				log.error("Failed to update switch's flow tables " + oc.getLvap().getAgent().getSwitch());
-        			}
+        			}*/
         			oc.getLvap().getAgent().updateClientLvap(oc);
         		}
 
@@ -958,7 +958,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinAp
 
 		return Command.CONTINUE;
 	}
-	*/
+	
 
 	@Override
 	public boolean isCallbackOrderingPostreq(OFType type, String name) {
