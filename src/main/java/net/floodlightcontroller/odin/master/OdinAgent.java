@@ -58,6 +58,7 @@ class OdinAgent implements IOdinAgent {
 	private static final String READ_HANDLER_RXSTATS = "rxstats";
 	private static final String READ_HANDLER_SPECTRAL_SCAN = "spectral_scan";
 	private static final String READ_HANDLER_CHANNEL = "channel";
+	private static final String READ_HANDLER_SCAN_CLIENT = "scan_client";
 	private static final String WRITE_HANDLER_ADD_VAP = "add_vap";
 	private static final String WRITE_HANDLER_SET_VAP = "set_vap";
 	private static final String WRITE_HANDLER_REMOVE_VAP = "remove_vap";
@@ -66,6 +67,7 @@ class OdinAgent implements IOdinAgent {
 	private static final String WRITE_HANDLER_SPECTRAL_SCAN = "spectral_scan";
 	private static final String WRITE_HANDLER_CHANNEL = "channel";
 	private static final String WRITE_HANDLER_CHANNEL_SWITCH_ANNOUNCEMENT = "channel_switch_announcement";
+	private static final String WRITE_HANDLER_SCAN_CLIENT = "scan_client";
 	private static final String ODIN_AGENT_ELEMENT = "odinagent";
 
 	private final int RX_STAT_NUM_PROPERTIES = 5;
@@ -520,4 +522,14 @@ class OdinAgent implements IOdinAgent {
 		}
 		invokeWriteHandler(WRITE_HANDLER_CHANNEL_SWITCH_ANNOUNCEMENT, sb.toString());
 	}
+
+	@Override
+	public void scanClient(MACAddress clientHwAddr, int channel) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(clientHwAddr);
+		sb.append(" ");
+		sb.append(channel);
+		invokeWriteHandler(WRITE_HANDLER_SCAN_CLIENT, sb.toString());
+	}  
+	
 }

@@ -117,5 +117,14 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	//void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MACAddress clientHwAddr, List<String> lvapSsids, int channel);
 
-
+	/**
+	 * Scanning for a client in a specific agent (AP)
+	 * 
+	 * @param Agent InetAddress
+	 * @param Client MAC
+	 * @param Channel
+	 * @author Luis Sequeira <sequeira@unizar.es>
+	 */
+	void scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel);
+	
 }

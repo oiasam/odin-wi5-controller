@@ -164,4 +164,14 @@ public interface IOdinAgent {
 	public void sendChannelSwitch(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList, int channel);
 	
 	
+	/**
+	 * Scanning for a client in a specific agent (AP)
+	 * 
+	 * @param Agent InetAddress
+	 * @param Client MAC
+	 * @param Channel
+	 */
+	public void scanClient (MACAddress clientHwAddr, int channel);
+
+	
 }
