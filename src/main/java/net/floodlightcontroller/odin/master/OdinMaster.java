@@ -689,8 +689,8 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param Client MAC
 	 * @param Channel
 	 */
-	protected final void scanClientFromAgent (InetAddress agentAddr, MACAddress clientHwAddr, int channel){
-		agentManager.getAgent(agentAddr).scanClient(clientHwAddr, channel);
+	protected final String scanClientFromAgent (InetAddress agentAddr, MACAddress clientHwAddr, int channel){
+		return agentManager.getAgent(agentAddr).scanClient(clientHwAddr, channel);
 	}
 	
 	//********* from IFloodlightModule **********//

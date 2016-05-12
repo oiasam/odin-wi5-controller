@@ -524,12 +524,19 @@ class OdinAgent implements IOdinAgent {
 	}
 
 	@Override
-	public void scanClient(MACAddress clientHwAddr, int channel) {
+	public String scanClient(MACAddress clientHwAddr, int channel) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");
 		sb.append(channel);
 		invokeWriteHandler(WRITE_HANDLER_SCAN_CLIENT, sb.toString());
+		try {
+			Thread.sleep(1000); // Is this enough or too much?
+		} catch (InterruptedException e){
+        		e.printStackTrace();
+		}
+		String handler = invokeReadHandler(READ_HANDLER_SCAN_CLIENT);
+		return handler;
 	}  
 	
 }

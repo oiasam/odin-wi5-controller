@@ -171,7 +171,7 @@ public interface IOdinAgent {
 	 * @param Client MAC
 	 * @param Channel
 	 */
-	public void scanClient (MACAddress clientHwAddr, int channel);
+	public String scanClient (MACAddress clientHwAddr, int channel);
 
 	
 }

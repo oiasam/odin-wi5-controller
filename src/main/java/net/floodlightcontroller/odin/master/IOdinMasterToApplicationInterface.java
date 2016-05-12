@@ -125,6 +125,6 @@ interface IOdinMasterToApplicationInterface {
 	 * @param Channel
 	 * @author Luis Sequeira <sequeira@unizar.es>
 	 */
-	void scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel);
+	String scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel);
 	
 }
