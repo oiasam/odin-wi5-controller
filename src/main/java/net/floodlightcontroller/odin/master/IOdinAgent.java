@@ -167,11 +167,13 @@ public interface IOdinAgent {
 	/**
 	 * Scanning for a client in a specific agent (AP)
 	 * 
-	 * @param Agent InetAddress
 	 * @param Client MAC
 	 * @param Channel
+	 * @param Scanning time
+	 * @return Signal power
+	 * 
 	 */
-	public String scanClient (MACAddress clientHwAddr, int channel);
+	public int scanClient (MACAddress clientHwAddr, int channel, int time);
 
 	
 }

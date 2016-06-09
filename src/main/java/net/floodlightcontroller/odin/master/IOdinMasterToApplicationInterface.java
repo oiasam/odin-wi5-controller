@@ -120,11 +120,14 @@ interface IOdinMasterToApplicationInterface {
 	/**
 	 * Scanning for a client in a specific agent (AP)
 	 * 
+	 * @param Pool
 	 * @param Agent InetAddress
 	 * @param Client MAC
 	 * @param Channel
+	 * @param Scanning time
+	 * @return Signal power
 	 * @author Luis Sequeira <sequeira@unizar.es>
 	 */
-	String scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel);
+	int scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel, int time);
 	
 }

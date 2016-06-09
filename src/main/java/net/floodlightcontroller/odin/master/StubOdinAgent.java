@@ -24,6 +24,7 @@ class StubOdinAgent implements IOdinAgent {
 	private InetAddress ipAddr = null;
 	private long lastHeard;
 	private int channel; 
+	private int lastScan;
 	private ConcurrentSkipListSet<OdinClient> clientList = new ConcurrentSkipListSet<OdinClient>();
 	
 	@Override
@@ -108,5 +109,10 @@ class StubOdinAgent implements IOdinAgent {
 	@Override
 	public void sendChannelSwitch(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList, int channel){
 		// Do nothing.
+	}
+	
+	@Override
+	public int scanClient(MACAddress clientHwAddr, int channel, int time){
+		return lastScan;
 	}
 }

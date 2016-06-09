@@ -187,9 +187,11 @@ public abstract class OdinApplication implements Runnable {
 	 * @param Agent InetAddress
 	 * @param Client MAC
 	 * @param Channel
+	 * @param Scanning time
+	 * @return Signal power
 	 */
-	protected final String scanClientFromAgent (InetAddress agentAddr, MACAddress clientHwAddr, int channel){
-		return odinApplicationInterfaceToMaster.scanClientFromAgent(pool, agentAddr, clientHwAddr, channel);
+	protected final int scanClientFromAgent (InetAddress agentAddr, MACAddress clientHwAddr, int channel, int time){
+		return odinApplicationInterfaceToMaster.scanClientFromAgent(pool, agentAddr, clientHwAddr, channel, time);
 	}
 	
 }

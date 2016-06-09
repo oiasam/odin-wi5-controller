@@ -181,7 +181,7 @@ public class HandoverMultichannel extends OdinApplication {
 				}
 	}
 
-	private void asigmentChannel () {
+	private void assignmentChannel () {
 		for (InetAddress agentAddr: getAgents()) {
 			log.info("HandoverMultichannel: Agent IP: " + agentAddr.getHostAddress());
 			if (agentAddr.getHostAddress().equals("192.168.1.7")){

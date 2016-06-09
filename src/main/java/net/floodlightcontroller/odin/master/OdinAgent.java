@@ -50,6 +50,7 @@ class OdinAgent implements IOdinAgent {
 	private InetAddress ipAddress;
 	private long lastHeard;
 	private int channel;
+	private int lastScan;
 
 	private ConcurrentSkipListSet<OdinClient> clientList = new ConcurrentSkipListSet<OdinClient>();
 
@@ -524,19 +525,20 @@ class OdinAgent implements IOdinAgent {
 	}
 
 	@Override
-	public String scanClient(MACAddress clientHwAddr, int channel) {
+	public int scanClient(MACAddress clientHwAddr, int channel, int time) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");
 		sb.append(channel);
 		invokeWriteHandler(WRITE_HANDLER_SCAN_CLIENT, sb.toString());
 		try {
-			Thread.sleep(1000); // Is this enough or too much?
+			Thread.sleep(time);
 		} catch (InterruptedException e){
         		e.printStackTrace();
 		}
 		String handler = invokeReadHandler(READ_HANDLER_SCAN_CLIENT);
-		return handler;
+		lastScan = Integer.parseInt(handler.trim());
+		return lastScan;
 	}  
 	
 }
