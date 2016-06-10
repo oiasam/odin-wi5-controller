@@ -25,11 +25,15 @@ public class MobilityManager extends OdinApplication {
 	private final long HYSTERESIS_THRESHOLD; // milliseconds
 	private final long IDLE_CLIENT_THRESHOLD; // milliseconds
 	private final long SIGNAL_STRENGTH_THRESHOLD; // dbm
+	private final long SIGNAL_THRESHOLD;
+	private final int SCANNING_TIME; // milliseconds
 
 	public MobilityManager () {
 		this.HYSTERESIS_THRESHOLD = 30000;
 		this.IDLE_CLIENT_THRESHOLD = 180000; // Must to be bigger than HYSTERESIS_THRESHOLD
 		this.SIGNAL_STRENGTH_THRESHOLD = 0;
+		this.SIGNAL_THRESHOLD = 50;
+		this.SCANNING_TIME = 100; // Time for scanning in another agent
 	}
 
 	/**
@@ -39,7 +43,7 @@ public class MobilityManager extends OdinApplication {
 		OdinEventSubscription oes = new OdinEventSubscription();
 		/* FIXME: Add something in order to subscribe more than one STA */
 		//oes.setSubscription("40:A5:EF:E5:93:DF", "signal", Relation.GREATER_THAN, 0); // One client
-        oes.setSubscription("*", "signal", Relation.GREATER_THAN, 0); // All clients
+        oes.setSubscription("*", "signal", Relation.LESSER_THAN, this.SIGNAL_THRESHOLD); // All clients
 
 		NotificationCallback cb = new NotificationCallback() {
 			@Override
@@ -58,56 +62,6 @@ public class MobilityManager extends OdinApplication {
 		this.channelAssignment();
 		init (); 
 	}
-
-	private void handler (OdinEventSubscription oes, NotificationCallbackContext cntx) {
-		OdinClient client = getClientFromHwAddress(cntx.clientHwAddress);
-		int lastScanningResult;
-		
-		/* The client is not registered in Odin, exit */
-		if (client == null)
-			return;
-		long currentTimestamp = System.currentTimeMillis();
-		// Assign mobility stats object if not already done
-		// add an entry in the clientMap table for this client MAC
-		// put the statistics in the table: value of the parameter, timestamp, timestamp
-		if (!clientMap.containsKey(cntx.clientHwAddress)) {
-			clientMap.put(cntx.clientHwAddress, new MobilityStats(cntx.value, currentTimestamp, currentTimestamp, cntx.agent.getIpAddress(), 0));
-		}
-		// get the statistics of that client
-		MobilityStats stats = clientMap.get(cntx.clientHwAddress);
-				
-		/* Scan and update statistics */
-		for (InetAddress agentAddr: getAgents()) { // FIXME: scan for nearby agents only 
-			if (!cntx.agent.getIpAddress().equals(agentAddr)) {
-				lastScanningResult = scanClientFromAgent(agentAddr, cntx.clientHwAddress, getChannelFromAgent(agentAddr), 100);
-				if (lastScanningResult >= stats.scanningResult) {
-					updateStatsWithReassignment(stats, cntx.value, currentTimestamp, agentAddr, lastScanningResult);
-				}
-			}
-		}
-		
-		/* Select the new agent */
-		if (stats.signalStrength >= stats.scanningResult) {
-			
-		}
-		
-		/* Now, handoff */
-		
-		// The client is associated to Odin (it has an LVAP), but it does not have an associated agent
-		// If client hasn't been assigned an agent, associate it to the current AP
-		if (client.getLvap().getAgent() == null) {
-			log.info("HandoverMultichannel: client hasn't been asigned an agent: handing off client " + cntx.clientHwAddress
-					+ " to agent " + nextAgent + " at " + System.currentTimeMillis());
-			handoffClientToAp(cntx.clientHwAddress, nextAgent);
-			updateStatsWithReassignment (stats, cntx.value, currentTimestamp, stats.agentAddr, stats.scanningResult);
-			return;
-		}
-		
-		
-		
-		
-		
-	}
 	
 	/**
 	 * This method will handoff a client in the event of its
@@ -116,21 +70,55 @@ public class MobilityManager extends OdinApplication {
 	 * @param oes
 	 * @param cntx
 	 */
-	private void handoffClient (OdinEventSubscription oes, NotificationCallbackContext cntx) {
+	private void handler (OdinEventSubscription oes, NotificationCallbackContext cntx) {
+		OdinClient client = getClientFromHwAddress(cntx.clientHwAddress);
+		long lastScanningResult;
 		
+		/* The client is not registered in Odin, exit */
+		if (client == null)
+			return;
+		long currentTimestamp = System.currentTimeMillis();
+		// Assign mobility stats object if not already done
+		// add an entry in the clientMap table for this client MAC
+		// put the statistics in the table: value of the parameter, timestamp, timestamp, agent, scanning result
+		if (!clientMap.containsKey(cntx.clientHwAddress)) {
+			clientMap.put(cntx.clientHwAddress, new MobilityStats(cntx.value, currentTimestamp, currentTimestamp, cntx.agent.getIpAddress(), cntx.value));
+		}
+		// get the statistics of that client
+		MobilityStats stats = clientMap.get(cntx.clientHwAddress);
+				
+		/* Scan and update statistics */
+		for (InetAddress agentAddr: getAgents()) { // FIXME: scan for nearby agents only 
+			if (!cntx.agent.getIpAddress().equals(agentAddr)) {
+				lastScanningResult = scanClientFromAgent(agentAddr, cntx.clientHwAddress, getChannelFromAgent(agentAddr), this.SCANNING_TIME);
+				if (lastScanningResult >= stats.scanningResult) {
+					updateStatsWithReassignment(stats, cntx.value, currentTimestamp, agentAddr, lastScanningResult);
+				}
+			}
+		}
 		
+		/* Now, handoff */
 		
-
+		// The client is associated to Odin (it has an LVAP), but it does not have an associated agent
+		// If client hasn't been assigned an agent, associate it to the current AP
+		if (client.getLvap().getAgent() == null) {
+			log.info("HandoverMultichannel: client hasn't been asigned an agent: handing off client " + cntx.clientHwAddress
+					+ " to agent " + stats.agentAddr + " at " + System.currentTimeMillis());
+			handoffClientToAp(cntx.clientHwAddress, stats.agentAddr);
+			updateStatsWithReassignment (stats, cntx.value, currentTimestamp, stats.agentAddr, stats.scanningResult);
+			return;
+		}
+		
 		// Check for out-of-range client
 		// a client has sent nothing during a certain time
 		if ((currentTimestamp - stats.lastHeard) > IDLE_CLIENT_THRESHOLD) {
 			log.info("HandoverMultichannel: client with MAC address " + cntx.clientHwAddress
-					+ " was idle longer than " + IDLE_CLIENT_THRESHOLD/1000 + " sec -> Reassociating it to agent " + nextAgent);
-			handoffClientToAp(cntx.clientHwAddress, nextAgent);
-			updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
+					+ " was idle longer than " + IDLE_CLIENT_THRESHOLD/1000 + " sec -> Reassociating it to agent " + stats.agentAddr);
+			handoffClientToAp(cntx.clientHwAddress, stats.agentAddr);
+			updateStatsWithReassignment (stats, cntx.value, currentTimestamp, stats.agentAddr, stats.scanningResult);
 			return;
 		}
-
+		
 		// If this notification is from the agent that's hosting the client's LVAP update MobilityStats and handoff.
 		// Else, update MobilityStats.
 		if (client.getLvap().getAgent().getIpAddress().equals(cntx.agent.getIpAddress())) {
@@ -145,9 +133,9 @@ public class MobilityManager extends OdinApplication {
 			// last time in the other AP
 			if (cntx.value >= stats.signalStrength + SIGNAL_STRENGTH_THRESHOLD) {
 				log.info("HandoverMultichannel: signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + " + SIGNAL_STRENGTH_THRESHOLD + " :" + "handing off client " + cntx.clientHwAddress
-						+ " to agent " + nextAgent);
-				handoffClientToAp(cntx.clientHwAddress, nextAgent);
-				updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
+						+ " to agent " + stats.agentAddr);
+				handoffClientToAp(cntx.clientHwAddress, stats.agentAddr);
+				updateStatsWithReassignment (stats, cntx.value, currentTimestamp, stats.agentAddr, stats.scanningResult);
 				return;
 			}
 		}
@@ -155,9 +143,10 @@ public class MobilityManager extends OdinApplication {
 			stats.signalStrength = cntx.value;
 			stats.lastHeard = currentTimestamp;
 		}
+		
 	}
 
-	private void updateStatsWithReassignment (MobilityStats stats, long signalValue, long now, InetAddress agentAddr, int scanningResult) {
+	private void updateStatsWithReassignment (MobilityStats stats, long signalValue, long now, InetAddress agentAddr, long scanningResult) {
 		stats.signalStrength = signalValue;
 		stats.lastHeard = now;
 		stats.assignmentTimestamp = now;
@@ -170,9 +159,9 @@ public class MobilityManager extends OdinApplication {
 		public long lastHeard;			// timestamp where it was heard the last time
 		public long assignmentTimestamp;	// timestamp it was assigned
 		public InetAddress agentAddr;
-		public int scanningResult;
+		public long scanningResult;
 
-		public MobilityStats (long signalStrength, long lastHeard, long assignmentTimestamp, InetAddress agentAddr, int scanningResult) {
+		public MobilityStats (long signalStrength, long lastHeard, long assignmentTimestamp, InetAddress agentAddr, long scanningResult) {
 			this.signalStrength = signalStrength;
 			this.lastHeard = lastHeard;
 			this.assignmentTimestamp = assignmentTimestamp;
