@@ -452,6 +452,19 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 
 	/**
+	 * Retreive TxStats from the agent
+	 *
+	 * @param pool that the invoking application corresponds to
+	 * @param agentAddr InetAddress of the agent
+	 *
+	 * @return Key-Value entries of each recorded statistic for each client
+	 */
+	@Override
+	public Map<MACAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr) {
+		return agentManager.getAgent(agentAddr).getTxStats();
+	}
+
+	/**
 	 * Retreive RxStats from the agent
 	 *
 	 * @param pool that the invoking application corresponds to

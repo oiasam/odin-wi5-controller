@@ -80,6 +80,17 @@ public abstract class OdinApplication implements Runnable {
 	
 	
 	/**
+	 * Retreive TxStats from the agent
+	 * 
+	 * @param agentAddr InetAddress of the agent
+	 * 
+	 * @return Key-Value entries of each recorded statistic for each client 
+	 */
+	protected final Map<MACAddress, Map<String, String>> getTxStatsFromAgent (InetAddress agentAddr) {
+		return odinApplicationInterface.getTxStatsFromAgent(pool, agentAddr);
+	}
+
+	/**
 	 * Retreive RxStats from the agent
 	 * 
 	 * @param agentAddr InetAddress of the agent

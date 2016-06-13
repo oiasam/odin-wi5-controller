@@ -34,8 +34,10 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	OdinClient getClientFromHwAddress (String pool, MACAddress clientHwAddress);
 	
-	Map<MACAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr);
+	Map<MACAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr);
 	
+	Map<MACAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr);
+
 	/**
 	 * Get a list of Odin agents from the agent tracker
 	 * @return a map of OdinAgent objects keyed by Ipv4 addresses
