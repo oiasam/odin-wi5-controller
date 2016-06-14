@@ -40,7 +40,7 @@ public interface IOdinAgent {
 	
 	
 	/**
-	 * Retrive Tx-stats from the OdinAgent.
+	 * Retrieve Tx-stats from the OdinAgent.
 	 * 
 	 *  @return A map of stations' MAC addresses to a map
 	 *  of properties and values.
@@ -48,7 +48,7 @@ public interface IOdinAgent {
 	public Map<MACAddress, Map<String, String>> getTxStats ();
 
 	/**
-	 * Retrive Rx-stats from the OdinAgent.
+	 * Retrieve Rx-stats from the OdinAgent.
 	 * 
 	 *  @return A map of stations' MAC addresses to a map
 	 *  of properties and values.
