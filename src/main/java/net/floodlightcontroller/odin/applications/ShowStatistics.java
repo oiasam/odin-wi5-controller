@@ -39,11 +39,11 @@ public class ShowStatistics extends OdinApplication {
 	    System.out.println("\nAgent: " + agentAddr);
 	    
 	    // Reception statistics
-	    Map<MACAddress, Map<String, String>> vals = getRxStatsFromAgent(agentAddr);
+	    Map<MACAddress, Map<String, String>> vals_rx = getRxStatsFromAgent(agentAddr);
 
 
             // for each STA associated to the Agent
-	    for (Entry<MACAddress, Map<String, String>> vals_entry_rx: vals.entrySet()) {
+	    for (Entry<MACAddress, Map<String, String>> vals_entry_rx: vals_rx.entrySet()) {
 	      MACAddress staHwAddr = vals_entry_rx.getKey();
 	      
 	      for (OdinClient oc_rx: clients) {
@@ -62,11 +62,11 @@ public class ShowStatistics extends OdinApplication {
 	    }
 	    
 	    // Transmission statistics
-	    Map<MACAddress, Map<String, String>> vals = getTxStatsFromAgent(agentAddr);
+	    Map<MACAddress, Map<String, String>> vals_tx = getTxStatsFromAgent(agentAddr);
 
 
             // for each STA associated to the Agent
-	    for (Entry<MACAddress, Map<String, String>> vals_entry_tx: vals.entrySet()) {
+	    for (Entry<MACAddress, Map<String, String>> vals_entry_tx: vals_tx.entrySet()) {
 	      MACAddress staHwAddr = vals_entry_tx.getKey();
 	      
 	      for (OdinClient oc_tx: clients) {
