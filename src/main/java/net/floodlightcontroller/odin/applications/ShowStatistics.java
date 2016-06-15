@@ -13,7 +13,7 @@ import net.floodlightcontroller.util.MACAddress;
 
 public class ShowStatistics extends OdinApplication {
 
-	private final int INTERVAL = 60000;
+	private final int INTERVAL = 10000;
 	//private final int SIGNAL_THRESHOLD = 160;
 
 	HashSet<OdinClient> clients;
@@ -44,19 +44,19 @@ public class ShowStatistics extends OdinApplication {
 				// for each Agent
 				for (InetAddress agentAddr: getAgents()) {
 					Map<MACAddress, Map<String, String>> vals = getRxStatsFromAgent(agentAddr);
-					System.out.println("IP Agent " + agentAddr + "\n");
+					System.out.println("Agent: " + agentAddr);
 
-          // for each STA associated to the Agent
+                                        // for each STA associated to the Agent
 					for (Entry<MACAddress, Map<String, String>> vals_entry: vals.entrySet()) {
 						MACAddress staHwAddr = vals_entry.getKey();
-						System.out.println("  MAC station " + staHwAddr + "\n");
-						System.out.println("    packets: " + vals_entry.getValue().get("packets") + "\n");
-						System.out.println("    avg rate: " + vals_entry.getValue().get("avg_rate") + "\n");
-						System.out.println("    avg signal: " + vals_entry.getValue().get("avg_signal") + "\n");
-						System.out.println("    avg length: " + vals_entry.getValue().get("avg_len_pkt") + "\n");
-						System.out.println("    air time: " + vals_entry.getValue().get("air_time") + "\n");						
-						System.out.println("    init time: " + vals_entry.getValue().get("first_received") + "\n");
-						System.out.println("    end time: " + vals_entry.getValue().get("last_received") + "\n");
+						System.out.println("  Station: " + staHwAddr + "\n");
+						System.out.println("    num packets: " + vals_entry.getValue().get("packets"));
+						System.out.println("    avg rate: " + vals_entry.getValue().get("avg_rate") + "kbps");
+						System.out.println("    avg signal: " + vals_entry.getValue().get("avg_signal") + "dBm");
+						System.out.println("    avg length: " + vals_entry.getValue().get("avg_len_pkt") + "bytes");
+						System.out.println("    air time: " + vals_entry.getValue().get("air_time") + "ms");						
+						System.out.println("    init time: " + vals_entry.getValue().get("first_received") + "sec");
+						System.out.println("    end time: " + vals_entry.getValue().get("last_received") + "sec");
 					}
 				}
 			} catch (InterruptedException e) {
