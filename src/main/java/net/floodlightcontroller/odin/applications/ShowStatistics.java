@@ -61,8 +61,8 @@ HashSet<OdinClient> clients;
 		 // for each STA associated to the Agent
 	     for (Entry<MACAddress, Map<String, String>> vals_entry_tx: vals_tx.entrySet()) {
 	       MACAddress staHwAddr = vals_entry_tx.getKey();
-            if (oc_tx.getMacAddress().equals(staHwAddr) && oc_tx.getIpAddress() != null && !oc_tx.getIpAddress().getHostAddress().equals("0.0.0.0")) {
-	          System.out.println("\tStation MAC: " + staHwAddr + " IP: " + oc_tx.getIpAddress().getHostAddress());
+            if (oc.getMacAddress().equals(staHwAddr) && oc.getIpAddress() != null && !oc.getIpAddress().getHostAddress().equals("0.0.0.0")) {
+	          System.out.println("\tStation MAC: " + staHwAddr + " IP: " + oc.getIpAddress().getHostAddress());
 	          System.out.println("Tx\tnum packets: " + vals_entry_tx.getValue().get("packets"));
 	          System.out.println("\t\tavg rate: " + vals_entry_tx.getValue().get("avg_rate") + " kbps");
 	          System.out.println("\t\tavg signal: " + vals_entry_tx.getValue().get("avg_signal") + " dBm");
