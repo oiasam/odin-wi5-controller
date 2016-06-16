@@ -13,7 +13,8 @@ import net.floodlightcontroller.util.MACAddress;
 
 public class ShowStatistics extends OdinApplication {
 
-private final int INTERVAL = 10000;
+// this interval is for allowing the agents to connect to the controller
+private final int INTERVAL = 15000; // in ms
 
 HashSet<OdinClient> clients;
 
