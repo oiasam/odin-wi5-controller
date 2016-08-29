@@ -34,6 +34,8 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	OdinClient getClientFromHwAddress (String pool, MACAddress clientHwAddress);
 	
+        long getLastHeardFromAgent (String pool, InetAddress agentAddr);
+
 	Map<MACAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr);
 	
 	Map<MACAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr);
