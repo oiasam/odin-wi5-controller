@@ -77,8 +77,17 @@ public abstract class OdinApplication implements Runnable {
 	protected final OdinClient getClientFromHwAddress (MACAddress clientHwAddress) {
 		return odinApplicationInterface.getClientFromHwAddress(pool, clientHwAddress);
 	}
-	
-	
+
+        /** Retreive LastHeard from the agent
+         *
+         * @param agentAddr InetAddress of the agent
+         *
+         * @return timestamp of the last ping heard from the agent
+         */
+        protected final long getLastHeardFromAgent (InetAddress agentAddr) {
+                return odinApplicationInterface.getLastHeardFromAgent(pool, agentAddr);
+        }
+
 	/**
 	 * Retreive TxStats from the agent
 	 * 
