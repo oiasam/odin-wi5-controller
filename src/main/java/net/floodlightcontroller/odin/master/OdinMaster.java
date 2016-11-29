@@ -300,11 +300,21 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			if (tup == null)
 				continue;
 
-
 			NotificationCallbackContext cntx = new NotificationCallbackContext(clientHwAddress, oa, entry.getValue());
 
 			tup.cb.exec(tup.oes, cntx);
 		}
+	}
+	
+	/**
+	 * Handle an flow message event from an agent
+	 *
+	 * @param odinAgentAddr agent at which the event was triggered
+	 */
+	synchronized void receiveFlow (final InetAddress odinAgentAddr) {
+		
+		//Fix me: callback to a application method.
+		
 	}
 	
 	/**

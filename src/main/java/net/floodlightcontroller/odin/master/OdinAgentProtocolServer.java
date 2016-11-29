@@ -23,6 +23,7 @@ class OdinAgentProtocolServer implements Runnable {
 	private final String ODIN_MSG_PUBLISH = "publish";
     private final String ODIN_MSG_DEAUTH = "deauthentication";
     private final String ODIN_MSG_ASSOC = "association";
+    private final String ODIN_MSG_FLOW = "flow";
 
 
 	private final int ODIN_SERVER_PORT;
@@ -84,6 +85,11 @@ class OdinAgentProtocolServer implements Runnable {
     private void receiveAssoc (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
         odinMaster.receiveAssoc(odinAgentAddr, clientHwAddress);
     }
+    
+	private void receiveFlow (final InetAddress odinAgentAddr) {
+		odinMaster.receiveFlow(odinAgentAddr);
+	}
+
 
 	private class OdinAgentConnectionHandler implements Runnable {
 		final DatagramPacket receivedPacket;
@@ -137,6 +143,8 @@ class OdinAgentProtocolServer implements Runnable {
                        final String staAddress = fields[1];
                        receiveAssoc(odinAgentAddr, MACAddress.valueOf(staAddress));
 
+                }else if(msg_type.equals(ODIN_MSG_FLOW)){
+                		receiveFlow(odinAgentAddr);
                 }
 	     }
 	}
