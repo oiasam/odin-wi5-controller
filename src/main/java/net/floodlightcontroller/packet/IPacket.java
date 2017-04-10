@@ -49,6 +49,11 @@ public interface IPacket {
     public IPacket setParent(IPacket packet);
 
     /**
+     * Reset any checksums as needed, and call resetChecksum on all parents
+     */
+    public void resetChecksum();
+    
+    /**
      * Sets all payloads parent packet if applicable, then serializes this 
      * packet and all payloads
      * @return a byte[] containing this packet and payloads
@@ -62,5 +67,12 @@ public interface IPacket {
      * @param length length of the data to deserialize
      * @return the deserialized data
      */
-    public IPacket deserialize(byte[] data, int offset, int length);
+    public IPacket deserialize(byte[] data, int offset, int length)
+            throws PacketParsingException;
+    
+    /** Clone this packet and its payload packet but not its parent. 
+     * 
+     * @return
+     */
+    public Object clone();
 }

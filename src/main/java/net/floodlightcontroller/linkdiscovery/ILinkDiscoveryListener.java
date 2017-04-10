@@ -17,7 +17,8 @@
 
 package net.floodlightcontroller.linkdiscovery;
 
-public interface ILinkDiscoveryListener extends ILinkDiscovery{
+import java.util.List;
 
-    public void linkDiscoveryUpdate(LDUpdate update);
+public interface ILinkDiscoveryListener extends ILinkDiscovery {
+    public void linkDiscoveryUpdate(List<LDUpdate> updateList);
 }

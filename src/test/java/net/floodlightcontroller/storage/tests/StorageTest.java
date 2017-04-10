@@ -23,13 +23,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import net.floodlightcontroller.debugcounter.MockDebugCounterService;
 import net.floodlightcontroller.restserver.RestApiServer;
 import net.floodlightcontroller.storage.CompoundPredicate;
 import net.floodlightcontroller.storage.IStorageExceptionHandler;
@@ -44,7 +48,6 @@ import net.floodlightcontroller.storage.RowOrdering;
 import net.floodlightcontroller.storage.nosql.NoSqlStorageSource;
 import net.floodlightcontroller.test.FloodlightTestCase;
 
-import org.junit.Test;
 
 public abstract class StorageTest extends FloodlightTestCase {
     
@@ -142,8 +145,10 @@ public abstract class StorageTest extends FloodlightTestCase {
     public void setUp() throws Exception {
         super.setUp();
         Set<String> indexedColumnNames = new HashSet<String>();
+        indexedColumnNames.add(PERSON_FIRST_NAME);
         indexedColumnNames.add(PERSON_LAST_NAME);
         storageSource.setExceptionHandler(null);
+        storageSource.setDebugCounterService(new MockDebugCounterService());
         storageSource.createTable(PERSON_TABLE_NAME, indexedColumnNames);
         storageSource.setTablePrimaryKeyName(PERSON_TABLE_NAME, PERSON_SSN);        
         initPersons();
@@ -173,7 +178,7 @@ public abstract class StorageTest extends FloodlightTestCase {
                 else if (expectedObject instanceof Double)
                     assertEquals(((Double)expectedObject).doubleValue(), resultSet.getDouble(columnName), 0.00001);
                 else if (expectedObject instanceof byte[])
-                    assertEquals((byte[])expectedObject, resultSet.getByteArray(columnName));
+                    assertTrue(Arrays.equals((byte[])expectedObject, resultSet.getByteArray(columnName)));
                 else if (expectedObject instanceof String)
                     assertEquals((String)expectedObject, resultSet.getString(columnName));
                 else
@@ -223,6 +228,38 @@ public abstract class StorageTest extends FloodlightTestCase {
         checkExpectedResults(resultSet, columnList, expectedResults);
     }
     
+    @Test
+    public void testEfficientOrQuery() {
+        String[] columnList = {PERSON_FIRST_NAME,PERSON_LAST_NAME};
+        Object[][] expectedResults = {
+                {"John", "Smith"},
+                {"Lisa", "Jones"},
+                {"Susan", "Jones"}
+        };
+        IResultSet resultSet = storageSource.executeQuery(PERSON_TABLE_NAME, columnList,
+                new CompoundPredicate(CompoundPredicate.Operator.OR, false,
+                        new OperatorPredicate(PERSON_LAST_NAME, OperatorPredicate.Operator.EQ, "Jones"),
+                        new OperatorPredicate(PERSON_LAST_NAME, OperatorPredicate.Operator.EQ, "Smith")
+                ),
+                new RowOrdering(PERSON_SSN));
+        checkExpectedResults(resultSet, columnList, expectedResults);
+    }
+
+    @Test
+    public void testEfficientAndQuery() {
+        String[] columnList = {PERSON_FIRST_NAME,PERSON_LAST_NAME};
+        Object[][] expectedResults = {
+                {"Lisa", "Jones"}
+        };
+        IResultSet resultSet = storageSource.executeQuery(PERSON_TABLE_NAME, columnList,
+                new CompoundPredicate(CompoundPredicate.Operator.AND, false,
+                        new OperatorPredicate(PERSON_LAST_NAME, OperatorPredicate.Operator.EQ, "Jones"),
+                        new OperatorPredicate(PERSON_FIRST_NAME, OperatorPredicate.Operator.EQ, "Lisa")
+                ),
+                new RowOrdering(PERSON_SSN));
+        checkExpectedResults(resultSet, columnList, expectedResults);
+    }
+
     @Test
     public void testOrQuery() {
         String[] columnList = {PERSON_FIRST_NAME,PERSON_LAST_NAME, PERSON_AGE};        

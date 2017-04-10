@@ -1,4 +1,20 @@
 /**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
+/**
  * Performance monitoring package
  */
 package net.floodlightcontroller.perfmon;
@@ -10,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.floodlightcontroller.core.FloodlightContext;
+import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
@@ -18,42 +35,40 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.restserver.IRestApiService;
 
-import org.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author subrata
- *
+ * This class contains a set of buckets (called time buckets as the
+ * primarily contain 'times' that are used in a circular way to 
+ * store information on packet in processing time.
+ * Each bucket is meant to store the various processing time 
+ * related data for a fixed duration.
+ * Buckets are reused to reduce garbage generation! Once the
+ * last bucket is used up the LRU bucket is reused.
+ * 
+ * Naming convention for variable or constants
+ * variable_s : value in seconds
+ * variable_ms: value in milliseconds
+ * variable_us: value in microseconds
+ * variable_ns: value in nanoseconds
+ * 
+ * Key Constants:
+ * ONE_BUCKET_DURATION_SECONDS_INT:  time duration of each bucket
+ * BUCKET_SET_SIZE: Number of buckets
+ * TOT_PROC_TIME_WARN_THRESHOLD_US: if processing time for a packet
+ *    exceeds this threshold then a warning LOG message is generated
+ * TOT_PROC_TIME_ALERT_THRESHOLD_US: same as above but an alert level
+ *    syslog is generated instead
+ * 
  */
 public class PktInProcessingTime
     implements IFloodlightModule, IPktInProcessingTimeService {
 
-    /***
-     * This class contains a set of buckets (called time buckets as the
-     * primarily contain 'times' that are used in a circular way to 
-     * store information on packet in processing time.
-     * Each bucket is meant to store the various processing time 
-     * related data for a fixed duration.
-     * Buckets are reused to reduce garbage generation! Once the
-     * last bucket is used up the LRU bucket is reused.
-     * 
-     * Naming convention for variable or constants
-     * variable_s : value in seconds
-     * variable_ms: value in milliseconds
-     * variable_us: value in microseconds
-     * variable_ns: value in nanoseconds
-     * 
-     * Key Constants:
-     * ONE_BUCKET_DURATION_SECONDS_INT:  time duration of each bucket
-     * BUCKET_SET_SIZE: Number of buckets
-     * TOT_PROC_TIME_WARN_THRESHOLD_US: if processing time for a packet
-     *    exceeds this threshold then a warning LOG message is generated
-     * TOT_PROC_TIME_ALERT_THRESHOLD_US: same as above but an alert level
-     *    syslog is generated instead
-     * 
-     */
     
+	protected IFloodlightProviderService floodlightProvider;
     // Our dependencies
     private IRestApiService restApi;
     
@@ -84,19 +99,19 @@ public class PktInProcessingTime
     
     @Override
     public void bootstrap(List<IOFMessageListener> listeners) {
-        if (!isInited) {
             ctb = new CumulativeTimeBucket(listeners);
-            isInited = true;
-        }
     }
     
     @Override
     public boolean isEnabled() {
-        return isEnabled && isInited;
+        return isEnabled;
     }
     
     @Override
     public void setEnabled(boolean enabled) {
+    	if(enabled){
+    		bootstrap(floodlightProvider.getListeners().get(OFType.PACKET_IN));
+    	}
         this.isEnabled = enabled;
         logger.debug("Setting module to " + isEnabled);
     }
@@ -136,9 +151,10 @@ public class PktInProcessingTime
             long procTimeNs = System.nanoTime() - startTimePktNs;
             ctb.updatePerPacketCounters(procTimeNs);
             
-            if (ptWarningThresholdInNano > 0 && procTimeNs > ptWarningThresholdInNano) {
-                logger.warn("Time to process packet-in: {} us", procTimeNs/1000);
-                logger.warn("{}", OFMessage.getDataAsString(sw, m, cntx));
+            if (ptWarningThresholdInNano > 0 && 
+                    procTimeNs > ptWarningThresholdInNano) {
+                logger.warn("Time to process packet-in exceeded threshold: {}", 
+                            procTimeNs/1000);
             }
         }
     }
@@ -170,12 +186,15 @@ public class PktInProcessingTime
         Collection<Class<? extends IFloodlightService>> l = 
                 new ArrayList<Class<? extends IFloodlightService>>();
         l.add(IRestApiService.class);
+        l.add(IFloodlightProviderService.class);
         return l;
     }
     
     @Override
     public void init(FloodlightModuleContext context)
                                              throws FloodlightModuleException {
+    	floodlightProvider = context
+                .getServiceImpl(IFloodlightProviderService.class);
         restApi = context.getServiceImpl(IRestApiService.class);
     }
     
@@ -188,8 +207,8 @@ public class PktInProcessingTime
         ptWarningThresholdInNano = Long.parseLong(System.getProperty(
              "net.floodlightcontroller.core.PTWarningThresholdInMilli", "0")) * 1000000;
         if (ptWarningThresholdInNano > 0) {
-            logger.info("Packet processing time threshold for warning set to {} ms.",
-                 ptWarningThresholdInNano/1000000);
+            logger.info("Packet processing time threshold for warning" +
+            		" set to {} ms.", ptWarningThresholdInNano/1000000);
         }
     }
 }

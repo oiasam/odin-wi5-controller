@@ -1,7 +1,7 @@
 /**
-*    Copyright 2012 Big Switch Networks, Inc. 
+*    Copyright 2012 Big Switch Networks, Inc.
 *    Originally created by David Erickson, Stanford University
-* 
+*
 *    Licensed under the Apache License, Version 2.0 (the "License"); you may
 *    not use this file except in compliance with the License. You may obtain
 *    a copy of the License at
@@ -17,26 +17,30 @@
 
 package net.floodlightcontroller.devicemanager;
 
-import net.floodlightcontroller.core.web.serializers.DPIDSerializer;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.OFPort;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.ser.ToStringSerializer;
+import net.floodlightcontroller.core.types.NodePortTuple;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 /**
  * A simple switch DPID/port pair
+ * This class is immutable
  * @author readams
  *
  */
-public class SwitchPort {
+public class SwitchPort extends NodePortTuple {
     @JsonSerialize(using=ToStringSerializer.class)
     public enum ErrorStatus {
         DUPLICATE_DEVICE("duplicate-device");
-        
+
         private String value;
         ErrorStatus(String v) {
             value = v;
         }
-        
+
         @Override
         public String toString() {
             return value;
@@ -51,10 +55,8 @@ public class SwitchPort {
             return null;
         }
     }
-    
-    protected long switchDPID;
-    protected int port;
-    ErrorStatus errorStatus;
+
+    private final ErrorStatus errorStatus;
 
     /**
      * Simple constructor
@@ -62,10 +64,8 @@ public class SwitchPort {
      * @param port the port
      * @param errorStatus any error status for the switch port
      */
-    public SwitchPort(long switchDPID, int port, ErrorStatus errorStatus) {
-        super();
-        this.switchDPID = switchDPID;
-        this.port = port;
+    public SwitchPort(DatapathId switchDPID, OFPort port, ErrorStatus errorStatus) {
+        super(switchDPID, port);
         this.errorStatus = errorStatus;
     }
 
@@ -74,26 +74,15 @@ public class SwitchPort {
      * @param switchDPID the dpid
      * @param port the port
      */
-    public SwitchPort(long switchDPID, int port) {
-        super();
-        this.switchDPID = switchDPID;
-        this.port = port;
+    public SwitchPort(DatapathId switchDPID, OFPort port) {
+        super(switchDPID, port);
         this.errorStatus = null;
     }
-    
+
     // ***************
     // Getters/Setters
     // ***************
 
-    @JsonSerialize(using=DPIDSerializer.class)
-    public long getSwitchDPID() {
-        return switchDPID;
-    }
-    
-    public int getPort() {
-        return port;
-    }
-    
     public ErrorStatus getErrorStatus() {
         return errorStatus;
     }
@@ -101,36 +90,32 @@ public class SwitchPort {
     // ******
     // Object
     // ******
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                        + ((errorStatus == null)
-                                ? 0
-                                : errorStatus.hashCode());
-        result = prime * result + port;
-        result = prime * result + (int) (switchDPID ^ (switchDPID >>> 32));
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        SwitchPort other = (SwitchPort) obj;
-        if (errorStatus != other.errorStatus) return false;
-        if (port != other.port) return false;
-        if (switchDPID != other.switchDPID) return false;
-        return true;
-    }
 
     @Override
     public String toString() {
-        return "SwitchPort [switchDPID=" + switchDPID + ", port=" + port
-                + ", errorStatus=" + errorStatus + "]";
+        return "SwitchPort [switchDPID=" + getNodeId().toString() +
+               ", port=" + getPortId() + ", errorStatus=" + errorStatus + "]";
     }
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((errorStatus == null) ? 0 : errorStatus.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SwitchPort other = (SwitchPort) obj;
+		if (errorStatus != other.errorStatus)
+			return false;
+		return true;
+	}
 }

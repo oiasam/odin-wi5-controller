@@ -1,7 +1,7 @@
 /**
- *    Copyright 2011, Big Switch Networks, Inc. 
+ *    Copyright 2011, Big Switch Networks, Inc.
  *    Originally created by David Erickson, Stanford University
- * 
+ *
  *    Licensed under the Apache License, Version 2.0 (the "License"); you may
  *    not use this file except in compliance with the License. You may obtain
  *    a copy of the License at
@@ -22,10 +22,20 @@ import java.util.Map;
 
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.core.FloodlightContext;
+import net.floodlightcontroller.core.HARole;
+import net.floodlightcontroller.core.IHAListener;
+import net.floodlightcontroller.core.IInfoProvider;
+import net.floodlightcontroller.core.IOFMessageListener;
+import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.RoleInfo;
+import net.floodlightcontroller.core.internal.RoleManager;
+import net.floodlightcontroller.core.internal.Controller.IUpdate;
+import net.floodlightcontroller.core.internal.Controller.ModuleLoaderState;
+import net.floodlightcontroller.core.FloodlightContextStore;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
-import org.openflow.protocol.factory.BasicFactory;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
 
 /**
  * The interface exposed by the core bundle that allows you to interact
@@ -33,27 +43,31 @@ import org.openflow.protocol.factory.BasicFactory;
  *
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
-public interface IFloodlightProviderService extends IFloodlightService {
+public interface IFloodlightProviderService extends
+        IFloodlightService, Runnable {
 
     /**
      * A value stored in the floodlight context containing a parsed packet
-     * representation of the payload of a packet-in message. 
+     * representation of the payload of a packet-in message.
      */
-    public static final String CONTEXT_PI_PAYLOAD = 
+    public static final String CONTEXT_PI_PAYLOAD =
             "net.floodlightcontroller.core.IFloodlightProvider.piPayload";
 
     /**
-     * The role of the controller as used by the OF 1.2 and OVS failover and
-     * load-balancing mechanism.
-     */
-    public static enum Role { EQUAL, MASTER, SLAVE };
-    
-    /**
-     * A FloodlightContextStore object that can be used to retrieve the 
+     * A FloodlightContextStore object that can be used to retrieve the
      * packet-in payload
      */
-    public static final FloodlightContextStore<Ethernet> bcStore = 
+    public static final FloodlightContextStore<Ethernet> bcStore =
             new FloodlightContextStore<Ethernet>();
+
+    /**
+     * Service name used in the service directory representing
+     * the OpenFlow controller-switch channel
+     *
+     * @see  ILocalServiceAddressTracker
+     * @see  IClusterServiceAddressDirectory
+     */
+    public static final String SERVICE_DIRECTORY_SERVICE_NAME = "openflow";
 
     /**
      * Adds an OpenFlow message listener
@@ -68,7 +82,7 @@ public interface IFloodlightProviderService extends IFloodlightService {
      * @param listener The component that no longer wants to receive the message
      */
     public void removeOFMessageListener(OFType type, IOFMessageListener listener);
-    
+
     /**
      * Return a non-modifiable list of all current listeners
      * @return listeners
@@ -76,52 +90,47 @@ public interface IFloodlightProviderService extends IFloodlightService {
     public Map<OFType, List<IOFMessageListener>> getListeners();
 
     /**
-     * Returns a list of all actively connected OpenFlow switches. This doesn't
-     * contain switches that are connected but the controller's in the slave role.
-     * @return the set of actively connected switches
+     * Get the current role of the controller
      */
-    public Map<Long, IOFSwitch> getSwitches();
-    
+    public HARole getRole();
+
     /**
      * Get the current role of the controller
      */
-    public Role getRole();
-    
+    public RoleInfo getRoleInfo();
+
     /**
      * Get the current mapping of controller IDs to their IP addresses
-     * Returns a copy of the current mapping. 
+     * Returns a copy of the current mapping.
      * @see IHAListener
      */
     public Map<String,String> getControllerNodeIPs();
-    
+
     /**
      * Gets the ID of the controller
      */
     public String getControllerId();
-    
-    /**
-     * Set the role of the controller
-     */
-    public void setRole(Role role);
-    
-    /**
-     * Add a switch listener
-     * @param listener The module that wants to listen for events
-     */
-    public void addOFSwitchListener(IOFSwitchListener listener);
 
     /**
-     * Remove a switch listener
-     * @param listener The The module that no longer wants to listen for events
+     * Set the role of the controller
+     * @param role The new role for the controller node
+     * @param changeDescription The reason or other information for this role change
      */
-    public void removeOFSwitchListener(IOFSwitchListener listener);
-    
+    public void setRole(HARole role, String changeDescription);
+
+    /**
+     * Add an update task for asynchronous, serialized execution
+     *
+     * @param update
+     */
+    public void addUpdateToQueue(IUpdate update);
+
     /**
      * Adds a listener for HA role events
      * @param listener The module that wants to listen for events
      */
     public void addHAListener(IHAListener listener);
-    
+
     /**
      * Removes a listener for HA role events
      * @param listener The module that no longer wants to listen for events
@@ -129,46 +138,17 @@ public interface IFloodlightProviderService extends IFloodlightService {
     public void removeHAListener(IHAListener listener);
 
     /**
-     * Terminate the process
-     */
-    public void terminate();
-
-    /**
-     * Re-injects an OFMessage back into the packet processing chain
-     * @param sw The switch to use for the message
-     * @param msg the message to inject
-     * @return True if successfully re-injected, false otherwise
-     */
-    public boolean injectOfMessage(IOFSwitch sw, OFMessage msg);
-
-    /**
-     * Re-injects an OFMessage back into the packet processing chain
-     * @param sw The switch to use for the message
-     * @param msg the message to inject
-     * @param bContext a floodlight context to use if required
-     * @return True if successfully re-injected, false otherwise
-     */
-    public boolean injectOfMessage(IOFSwitch sw, OFMessage msg, 
-            FloodlightContext bContext);
-
-    /**
      * Process written messages through the message listeners for the controller
      * @param sw The switch being written to
-     * @param m the message 
-     * @param bc any accompanying context object
+     * @param m the message
+     * @throws NullPointerException if switch or msg is null
      */
-    public void handleOutgoingMessage(IOFSwitch sw, OFMessage m, 
-            FloodlightContext bc);
-
-    /**
-     * Gets the BasicFactory
-     * @return an OpenFlow message factory
-     */
-    public BasicFactory getOFMessageFactory();
+    public void handleOutgoingMessage(IOFSwitch sw, OFMessage m);
 
     /**
      * Run the main I/O loop of the Controller.
      */
+    @Override
     public void run();
 
     /**
@@ -184,19 +164,58 @@ public interface IFloodlightProviderService extends IFloodlightService {
     * @param provider
     */
    public void removeInfoProvider(String type, IInfoProvider provider);
-   
+
    /**
     * Return information of a particular type (for rest services)
     * @param type
     * @return
     */
    public Map<String, Object> getControllerInfo(String type);
-   
-   
+
    /**
     * Return the controller start time in  milliseconds
     * @return
     */
    public long getSystemStartTime();
 
+   /**
+    * Get controller memory information
+    */
+   public Map<String, Long> getMemory();
+
+   /**
+    * returns the uptime of this controller.
+    * @return
+    */
+   public Long getUptime();
+
+   public void handleMessage(IOFSwitch sw, OFMessage m,
+                          FloodlightContext bContext);
+
+   /**
+    * Gets the role manager
+    * @return the role manager
+    */
+   public RoleManager getRoleManager();
+
+   /**
+    * Gets the current module loading state.
+    * @return the current module loading state.
+    */
+   ModuleLoaderState getModuleLoaderState();
+
+   // paag
+   /**
+    * Add a completion listener to the controller
+    * 
+    * @param listener
+    */
+   void addCompletionListener(IControllerCompletionListener listener);
+
+   /**
+    * Remove a completion listener from the controller
+    * 
+    * @param listener
+    */
+   void removeCompletionListener(IControllerCompletionListener listener);
 }

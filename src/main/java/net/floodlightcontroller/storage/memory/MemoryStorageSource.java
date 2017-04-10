@@ -21,6 +21,8 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.perfmon.IPktInProcessingTimeService;
 import net.floodlightcontroller.storage.nosql.NoSqlStorageSource;
 import net.floodlightcontroller.storage.SynchronousExecutorService;
+import net.floodlightcontroller.storage.IStorageSourceService;
+import net.floodlightcontroller.core.module.IFloodlightService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,7 +70,10 @@ public class MemoryStorageSource extends NoSqlStorageSource {
             Collection<Map<String,Object>> allRows = table.getAllRows();
             for (Map<String,Object> row : allRows) {
                 Object v = row.get(predicateColumnName);
-                if (value.equals(v)) {
+                if (value != null) {
+                    if ((v != null) && value.equals(v))
+                        result.add(row);
+                } else if (v == null) {
                     result.add(row);
                 }
             }
@@ -181,5 +186,21 @@ public class MemoryStorageSource extends NoSqlStorageSource {
     public void startUp(FloodlightModuleContext context) {
         super.startUp(context);
         executorService = new SynchronousExecutorService();
+    }
+    
+    @Override
+    public void init(FloodlightModuleContext context) throws net.floodlightcontroller.core.module.FloodlightModuleException {
+    	super.init(context);
+    };
+
+    @Override
+    public Map<Class<? extends IFloodlightService>,
+               IFloodlightService> getServiceImpls() {
+        Map<Class<? extends IFloodlightService>,
+            IFloodlightService> m =
+                new HashMap<Class<? extends IFloodlightService>,
+                            IFloodlightService>();
+        m.put(IStorageSourceService.class, this);
+        return m;
     }
 }

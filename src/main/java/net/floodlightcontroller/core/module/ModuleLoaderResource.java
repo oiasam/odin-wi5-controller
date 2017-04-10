@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.core.module;
 
 import java.util.Collection;
@@ -5,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 
 import org.restlet.resource.Get;
 import org.restlet.resource.ServerResource;
@@ -37,6 +52,9 @@ public class ModuleLoaderResource extends ServerResource {
      */
     public Map<String, Object> retrieveInternal(boolean loadedOnly) {    
         Map<String, Object> model = new HashMap<String, Object>();
+        FloodlightModuleLoader floodlightModuleLoader =
+                (FloodlightModuleLoader) getContext().getAttributes().
+                get(FloodlightModuleLoader.class.getCanonicalName());
 
         Set<String> loadedModules = new HashSet<String>();
         for (Object val : getContext().getAttributes().values()) {
@@ -47,13 +65,11 @@ public class ModuleLoaderResource extends ServerResource {
         	}
         }
 
-        for (String moduleName : 
-        				FloodlightModuleLoader.moduleNameMap.keySet() ) {
+        for (String moduleName : floodlightModuleLoader.getModuleNameMap().keySet() ) {
         	Map<String,Object> moduleInfo = new HashMap<String, Object>();
 
         	IFloodlightModule module = 
-        				FloodlightModuleLoader.moduleNameMap.get(
-        						moduleName);
+        			floodlightModuleLoader.getModuleNameMap().get(moduleName);
         		
         	Collection<Class<? extends IFloodlightService>> deps = 
         			module.getModuleDependencies();

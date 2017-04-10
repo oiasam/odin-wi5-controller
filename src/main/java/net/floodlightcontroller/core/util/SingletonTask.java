@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * * If the task has begun, set a bit to restart it after the current task finishes
  */
 public class SingletonTask {
-    protected static Logger logger = LoggerFactory.getLogger(SingletonTask.class);
+    protected static final Logger logger = LoggerFactory.getLogger(SingletonTask.class);
             
     protected static class SingletonTaskContext  {
         protected boolean taskShouldRun = false;
@@ -57,8 +57,9 @@ public class SingletonTask {
         @Override
         public void run() {
             synchronized (parent.context) {
-                if (canceled || !parent.context.taskShouldRun)
+                if (canceled || !parent.context.taskShouldRun) {
                     return;
+                }
 
                 parent.context.taskRunning = true;
                 parent.context.taskShouldRun = false;
@@ -68,6 +69,10 @@ public class SingletonTask {
                 parent.task.run();
             } catch (Exception e) {
                 logger.error("Exception while executing task", e);
+            }
+            catch (Error e) {
+                logger.error("Error while executing task", e);
+                throw e;
             }
 
             synchronized (parent.context) {
@@ -126,9 +131,9 @@ public class SingletonTask {
                     // schedule to restart at the right time
                     if (delay > 0) {
                         long now = System.nanoTime();
-                        long then = 
-                            now + TimeUnit.NANOSECONDS.convert(delay, unit);
+                        long then = now + TimeUnit.NANOSECONDS.convert(delay, unit);
                         context.waitingTask.nextschedule = then;
+                        logger.debug("rescheduled task " + this + " for " + TimeUnit.SECONDS.convert(then, TimeUnit.NANOSECONDS) + "s. A bunch of these messages -may- indicate you have a blocked task.");
                     } else {
                         context.waitingTask.nextschedule = 0;
                     }
@@ -148,10 +153,11 @@ public class SingletonTask {
         }
 
         if (needQueue) {
-            if (delay <= 0)
+            if (delay <= 0) {
                 ses.execute(stw);
-            else
+            } else {
                 ses.schedule(stw, delay, unit);
+            }
         }
     }
 }

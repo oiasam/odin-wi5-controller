@@ -1,197 +1,256 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.topology;
 
-import java.util.Date;
-import java.util.Set;
-
 import net.floodlightcontroller.core.module.IFloodlightService;
-import net.floodlightcontroller.linkdiscovery.ILinkDiscovery.LDUpdate;
+import net.floodlightcontroller.core.types.NodePortTuple;
+import net.floodlightcontroller.linkdiscovery.Link;
+
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.OFPort;
+
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 public interface ITopologyService extends IFloodlightService  {
 
-    public void addListener(ITopologyListener listener);
-
-    public Date getLastUpdateTime();
-
-    /**
-     * Query to determine if devices must be learned on a given switch port.
+	/*******************************************************
+	 * GENERAL TOPOLOGY FUNCTIONS
+	 *******************************************************/
+	
+	/**
+	 * Add a listener to be notified upon topology events.
+	 * @param listener
+	 */
+	public void addListener(ITopologyListener listener);
+	
+	/**
+     * Remove a listener to stop receiving topology events.
+     * @param listener
      */
-    public boolean isAttachmentPointPort(long switchid, short port);
-    public boolean isAttachmentPointPort(long switchid, short port,
-                                         boolean tunnelEnabled);
+    public void removeListener(ITopologyListener listener);
 
-    public long getOpenflowDomainId(long switchId);
-    public long getOpenflowDomainId(long switchId, boolean tunnelEnabled);
+	/**
+	 * Retrieve the last time the topology was computed.
+	 * @return
+	 */
+	public Date getLastUpdateTime();
 
-    /**
-     * Returns the identifier of the L2 domain of a given switch.
-     * @param switchId The DPID of the switch in long form
-     * @return The DPID of the switch that is the key for the cluster
+	/*******************************************************
+	 * PORT FUNCTIONS
+	 *******************************************************/
+	
+	/**
+	 * Determines if a device can be learned/located on this switch+port.
+	 * @param switchid
+	 * @param port
+	 * @return
+	 */
+	public boolean isAttachmentPointPort(DatapathId switchid, OFPort port);
+
+	/**
+	 * Determines whether or not a switch+port is a part of
+	 * a link or is a leaf of the network.
+	 * @param sw
+	 * @param p
+	 * @return
+	 */
+   	public boolean isEdge(DatapathId sw, OFPort p);
+   	
+	/**
+	 * Get list of ports that can SEND a broadcast packet.
+	 * @param sw
+	 * @return
+	 */
+	public Set<OFPort> getSwitchBroadcastPorts(DatapathId sw);
+	
+	/**
+	 * Checks if the switch+port is in the broadcast tree.
+	 * @param sw
+	 * @param port
+	 * @return
+	 */
+	public boolean isBroadcastPort(DatapathId sw, OFPort port);
+
+	/**
+	 * Indicates if an attachment point on the new switch port is consistent
+	 * with the attachment point on the old switch port or not.
+	 * @param oldSw
+	 * @param oldPort
+	 * @param newSw
+	 * @param newPort
+	 * @return
+	 */
+	public boolean isConsistent(DatapathId oldSw, OFPort oldPort, 
+			DatapathId newSw, OFPort newPort);
+
+	/** 
+	 * Get broadcast ports on a target switch for a given attachment point
+	 * point port.
+	 * @param targetSw
+	 * @param src
+	 * @param srcPort
+	 * @return
+	 */
+	public Set<OFPort> getBroadcastPorts(DatapathId targetSw, DatapathId src, OFPort srcPort);
+
+	/**
+	 * Checks if the given switch+port is allowed to send or receive broadcast packets.
+	 * @param sw
+	 * @param portId
+	 * @return
+	 */
+	public boolean isBroadcastAllowed(DatapathId sw, OFPort portId);
+
+	/**
+	 * Gets the set of ports that participate in the broadcast within each archipelago
+	 * @return
+	 */
+	public Set<NodePortTuple> getAllBroadcastPorts();
+	
+	/**
+     * Gets the set of ports that participate in the broadcast trees for the
+     * archipelago in which the swtich belongs
+     * @param sw
+     * @return
      */
-    public long getL2DomainId(long switchId);
-    public long getL2DomainId(long switchId, boolean tunnelEnabled);
+    public Set<NodePortTuple> getBroadcastPortsInArchipelago(DatapathId sw);
+	
+	/**
+	 * Gets the set of ports that belong to tunnels.
+	 * @return
+	 */
+	public Set<NodePortTuple> getTunnelPorts();
 
-    /**
-     * Queries whether two switches are in the same cluster.
-     * @param switch1
-     * @param switch2
-     * @return true if the switches are in the same cluster
+	/**
+	 * Returns a set of blocked ports.  The set of blocked
+	 * ports is the union of all the blocked ports across all
+	 * instances.
+	 * @return
+	 */
+	public Set<NodePortTuple> getBlockedPorts();
+	
+	/**
+     * Determines if the switch+port is blocked. If blocked, it
+     * should not be allowed to send/receive any traffic.
+     * @param sw
+     * @param portId
+     * @return
      */
-    public boolean inSameOpenflowDomain(long switch1, long switch2);
-    public boolean inSameOpenflowDomain(long switch1, long switch2, 
-                                        boolean tunnelEnabled);
+    public boolean isNotBlocked(DatapathId sw, OFPort portId);
 
-    /**
-     * Queries whether two switches are in the same island.
-     * Currently, island and cluster are the same. In future,
-     * islands could be different than clusters.
-     * @param switch1
-     * @param switch2
-     * @return True of they are in the same island, false otherwise
+	/**
+	 * Returns the enabled, non quarantined ports of the given switch. Returns
+	 * an empty set if switch doesn't exists, doesn't have any enabled port, or
+	 * has only quarantined ports. Will never return null.
+	 */
+	public Set<OFPort> getPorts(DatapathId sw);
+	
+	/*******************************************************
+	 * CLUSTER AND ARCHIPELAGO FUNCTIONS
+	 *******************************************************/
+	
+	/**
+	 * Return the ID of the domain/island/cluster this switch is
+	 * a part of. The ID is the lowest switch DPID within the domain.
+	 * @param switchId
+	 * @return
+	 */
+	public DatapathId getClusterId(DatapathId switchId);
+	
+	/**
+     * Return the ID of the archipelago this switch is
+     * a part of. The ID is the lowest cluster DPID within the archipelago.
+     * @param switchId
+     * @return
      */
-    public boolean inSameL2Domain(long switch1, long switch2);
-    public boolean inSameL2Domain(long switch1, long switch2, 
-                                  boolean tunnelEnabled);
-
-    public boolean isBroadcastDomainPort(long sw, short port);
-    public boolean isBroadcastDomainPort(long sw, short port, 
-                                         boolean tunnelEnabled);
-
-
-    public boolean isAllowed(long sw, short portId);
-    public boolean isAllowed(long sw, short portId, boolean tunnelEnabled);
-
+    public DatapathId getArchipelagoId(DatapathId switchId);
+    
     /**
-     * Indicates if an attachment point on the new switch port is consistent
-     * with the attachment point on the old switch port or not.
+     * Return all archipelagos
+     * @return
      */
-    public boolean isConsistent(long oldSw, short oldPort,
-                                long newSw, short newPort);
-    public boolean isConsistent(long oldSw, short oldPort,
-                                long newSw, short newPort,
-                                boolean tunnelEnabled);
-
-    /**
-     * Indicates if the two switch ports are connected to the same
-     * broadcast domain or not.
+    public Set<DatapathId> getArchipelagoIds();
+	
+	/**
+	 * Determines if two switches are in the same domain/island/cluster.
+	 * @param s1
+	 * @param s2
+	 * @return true if the switches are in the same cluster
+	 */
+	public boolean isInSameCluster(DatapathId s1, DatapathId s2);
+	
+	/**
+     * Determines if two switches are in the same archipelago.
      * @param s1
-     * @param p1
      * @param s2
-     * @param p2
+     * @return true if the switches are in the same archipelago
+     */
+    public boolean isInSameArchipelago(DatapathId s1, DatapathId s2);
+
+	/**
+	 * Gets all switches in the same domain/island/cluster as the switch provided.
+	 * @param sw
+	 * @return
+	 */
+	public Set<DatapathId> getSwitchesInCluster(DatapathId sw);
+	
+	/**
+     * Gets all cluster IDs in the same archipelago as the switch provided.
+     * @param sw
      * @return
      */
-    public boolean isInSameBroadcastDomain(long s1, short p1, 
-                                           long s2, short p2);
-    public boolean isInSameBroadcastDomain(long s1, short p1,
-                                           long s2, short p2,
-                                           boolean tunnelEnabled);
-
-    /**
-     * Gets a list of ports on a given switch that are known to topology.
-     * @param sw The switch DPID in long
-     * @return The set of ports on this switch
-     */
-    public Set<Short> getPorts(long sw);
-    public Set<Short> getPorts(long sw, boolean tunnelEnabled);
-
-    /** Get broadcast ports on a target switch for a given attachmentpoint
-     * point port.
-     */
-    public Set<Short> getBroadcastPorts(long targetSw, long src, short srcPort);
-
-    public Set<Short> getBroadcastPorts(long targetSw, long src, short srcPort,
-                                        boolean tunnelEnabled);
+    public Set<DatapathId> getClusterIdsInArchipelago(DatapathId sw);
     
-    /**
-     * 
-     */
-    public boolean isIncomingBroadcastAllowed(long sw, short portId);
-    public boolean isIncomingBroadcastAllowed(long sw, short portId,
-                                              boolean tunnelEnabled);
-
-
-    /** Get the proper outgoing switchport for a given pair of src-dst
-     * switchports.
-     */
-    public NodePortTuple getOutgoingSwitchPort(long src, short srcPort,
-                                               long dst, short dstPort);
-
-
-    public NodePortTuple getOutgoingSwitchPort(long src, short srcPort,
-                                               long dst, short dstPort,
-                                               boolean tunnelEnabled);
-
-
-    public NodePortTuple getIncomingSwitchPort(long src, short srcPort,
-                                               long dst, short dstPort);
-    public NodePortTuple getIncomingSwitchPort(long src, short srcPort,
-                                               long dst, short dstPort,
-                                               boolean tunnelEnabled);
-
-    /**
-     * If the dst is not allowed by the higher-level topology,
-     * this method provides the topologically equivalent broadcast port.
-     * @param src
-     * @param dst
-     * @return the allowed broadcast port
-     */
-    public NodePortTuple 
-    getAllowedOutgoingBroadcastPort(long src,
-                                    short srcPort,
-                                    long dst,
-                                    short dstPort);
-
-    public NodePortTuple 
-    getAllowedOutgoingBroadcastPort(long src,
-                                    short srcPort,
-                                    long dst,
-                                    short dstPort,
-                                    boolean tunnelEnabled);
-
-    /**
-     * If the src broadcast domain port is not allowed for incoming
-     * broadcast, this method provides the topologically equivalent
-     * incoming broadcast-allowed
-     * src port.  
-     * @param src
-     * @param dst
-     * @return the allowed broadcast port
-     */
-    public NodePortTuple
-    getAllowedIncomingBroadcastPort(long src,
-                                    short srcPort);
-
-    public NodePortTuple
-    getAllowedIncomingBroadcastPort(long src,
-                                    short srcPort,
-                                    boolean tunnelEnabled);
-
-    
-    /**
-     * Gets the set of ports that belong to a broadcast domain.
-     * @return The set of ports that belong to a broadcast domain.
-     */
-    public Set<NodePortTuple> getBroadcastDomainPorts();
-    public Set<NodePortTuple> getTunnelPorts();
-    
-    /**
-     * Indicates if tunnels are allowed between a given source
-     * destination pair.
-     */
-    public boolean isTunnelEnabled(long srcMac, long dstMac);
-
-    /**
-     * Returns a set of blocked ports.  The set of blocked
-     * ports is the union of all the blocked ports across all
-     * instances.
+	
+	/*******************************************************
+	 * LINK FUNCTIONS
+	 *******************************************************/
+	
+	/**
+	 * Get all network links, including intra-cluster and inter-cluster links. 
+	 * Links are grouped for each DatapathId separately.
+	 * @return
+	 */
+	public Map<DatapathId, Set<Link>> getAllLinks();
+	
+	/**
+	 * Gets a list of ports on a given switch that are part of known links.
+	 * @param sw
+	 * @return
+	 */
+	public Set<OFPort> getPortsWithLinks(DatapathId sw);
+	
+	/**
+	 * Get all links that are:
+	 * --external
+	 * --detected via BDDP
+	 * --connect two clusters
+	 * @return
+	 */
+	public Set<Link> getExternalInterClusterLinks();
+	
+	/**
+     * Get all links that are:
+     * --internal
+     * --detected via LLDP
+     * --connect two clusters
      * @return
      */
-    public Set<NodePortTuple> getBlockedPorts();
-    
-    /**
-     * ITopologyListener provides topologyChanged notification, 
-     * but not *what* the changes were.  
-     * This method returns the delta in the linkUpdates between the current and the previous topology instance.
-     * @return
-     */
-    public Set<LDUpdate> getLastLinkUpdates();
+    public Set<Link> getInternalInterClusterLinks();
 }

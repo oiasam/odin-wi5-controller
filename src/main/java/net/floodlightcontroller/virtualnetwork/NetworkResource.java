@@ -1,15 +1,33 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.virtualnetwork;
 
 import java.io.IOException;
+import java.util.Collection;
 
-import net.floodlightcontroller.packet.IPv4;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.MappingJsonFactory;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.MappingJsonFactory;
+import org.projectfloodlight.openflow.types.IPv4Address;
 import org.restlet.data.Status;
 import org.restlet.resource.Delete;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
@@ -30,7 +48,7 @@ public class NetworkResource extends ServerResource {
         JsonParser jp;
         
         try {
-            jp = f.createJsonParser(json);
+            jp = f.createParser(json);
         } catch (JsonParseException e) {
             throw new IOException(e);
         }
@@ -52,6 +70,7 @@ public class NetworkResource extends ServerResource {
             else if (n.equals("network")) {
                 while (jp.nextToken() != JsonToken.END_OBJECT) {
                     String field = jp.getCurrentName();
+                    if (field == null) continue;
                     if (field.equals("name")) {
                         network.name = jp.getText();
                     } else if (field.equals("gateway")) {
@@ -72,6 +91,14 @@ public class NetworkResource extends ServerResource {
         jp.close();
     }
     
+    @Get("json")
+    public Collection <VirtualNetwork> retrieve() {
+        IVirtualNetworkService vns =
+                (IVirtualNetworkService)getContext().getAttributes().
+                    get(IVirtualNetworkService.class.getCanonicalName());
+        
+        return vns.listNetworks();               
+    }
     
     @Put
     @Post
@@ -95,10 +122,10 @@ public class NetworkResource extends ServerResource {
                 (IVirtualNetworkService)getContext().getAttributes().
                     get(IVirtualNetworkService.class.getCanonicalName());
         
-        Integer gw = null;
+        IPv4Address gw = null;
         if (network.gateway != null) {
             try {
-                gw = IPv4.toIPv4Address(network.gateway);
+                gw = IPv4Address.of(network.gateway);
             } catch (IllegalArgumentException e) {
                 log.warn("Could not parse gateway {} as IP for network {}, setting as null",
                          network.gateway, network.name);

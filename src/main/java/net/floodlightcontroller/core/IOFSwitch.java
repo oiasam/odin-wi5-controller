@@ -1,7 +1,6 @@
 /**
-*    Copyright 2011, Big Switch Networks, Inc. 
 *    Originally created by David Erickson, Stanford University
-* 
+*
 *    Licensed under the Apache License, Version 2.0 (the "License"); you may
 *    not use this file except in compliance with the License. You may obtain
 *    a copy of the License at
@@ -17,89 +16,126 @@
 
 package net.floodlightcontroller.core;
 
-import java.io.IOException;
-import java.util.Date;
+import java.net.SocketAddress;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
-import net.floodlightcontroller.core.IFloodlightProviderService.Role;
+import java.util.Set;
+import java.util.Date;
 
-import org.jboss.netty.channel.Channel;
-import org.openflow.protocol.OFFeaturesReply;
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPhysicalPort;
-import org.openflow.protocol.OFStatisticsRequest;
-import org.openflow.protocol.statistics.OFDescriptionStatistics;
-import org.openflow.protocol.statistics.OFStatistics;
+import org.projectfloodlight.openflow.protocol.OFActionType;
+import org.projectfloodlight.openflow.protocol.OFCapabilities;
+import org.projectfloodlight.openflow.protocol.OFControllerRole;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFRequest;
+import org.projectfloodlight.openflow.protocol.OFStatsReply;
+import org.projectfloodlight.openflow.protocol.OFStatsRequest;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.TableId;
+import org.projectfloodlight.openflow.types.U64;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
+
+import net.floodlightcontroller.core.internal.OFConnection;
+import net.floodlightcontroller.core.internal.TableFeatures;
+import net.floodlightcontroller.core.web.serializers.IOFSwitchSerializer;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 /**
- *
- *
- * @author David Erickson (daviderickson@cs.stanford.edu)
+ * An openflow switch connecting to the controller.  This interface offers
+ * methods for interacting with switches using OpenFlow, and retrieving
+ * information about the switches.
  */
-public interface IOFSwitch {
+@JsonSerialize(using=IOFSwitchSerializer.class)
+public interface IOFSwitch extends IOFMessageWriter {
     // Attribute keys
-    public static final String SWITCH_DESCRIPTION_FUTURE = "DescriptionFuture";
-    public static final String SWITCH_DESCRIPTION_DATA = "DescriptionData";
-    public static final String SWITCH_SUPPORTS_NX_ROLE = "supportsNxRole";
-    public static final String SWITCH_IS_CORE_SWITCH = "isCoreSwitch";
-    public static final String PROP_FASTWILDCARDS = "FastWildcards";
-    public static final String PROP_REQUIRES_L3_MATCH = "requiresL3Match";
-    public static final String PROP_SUPPORTS_OFPP_TABLE = "supportsOfppTable";
-    public static final String PROP_SUPPORTS_OFPP_FLOOD = "supportsOfppFlood";
-    
-    /**
-     * Writes to the OFMessage to the output stream.
-     * The message will be handed to the floodlightProvider for possible filtering
-     * and processing by message listeners
-     * @param m   
-     * @param bc  
-     * @throws IOException  
-     */
-    public void write(OFMessage m, FloodlightContext bc) throws IOException; 
-    
-    /**
-     * Writes the list of messages to the output stream
-     * The message will be handed to the floodlightProvider for possible filtering
-     * and processing by message listeners.
-     * @param msglist
-     * @param bc
-     * @throws IOException
-     */
-    public void write(List<OFMessage> msglist, FloodlightContext bc) throws IOException;
-    
-    /**
-     * 
-     * @throws IOException
-     */
-    public void disconnectOutputStream();
+    // These match our YANG schema, make sure they are in sync
+    public static final String SWITCH_DESCRIPTION_FUTURE = "description-future";
+    public static final String SWITCH_DESCRIPTION_DATA = "description-data";
+    public static final String SWITCH_SUPPORTS_NX_ROLE = "supports-nx-role";
+    public static final String PROP_FASTWILDCARDS = "fast-wildcards";
+    public static final String PROP_REQUIRES_L3_MATCH = "requires-l3-match";
+    public static final String PROP_SUPPORTS_OFPP_TABLE = "supports-ofpp-table";
+    public static final String PROP_SUPPORTS_OFPP_FLOOD = "supports-ofpp-flood";
+    public static final String PROP_SUPPORTS_NETMASK_TBL = "supports-netmask-table";
+    public static final String PROP_SUPPORTS_BSN_SET_TUNNEL_DST_ACTION =
+            "supports-set-tunnel-dst-action";
+    public static final String PROP_SUPPORTS_NX_TTL_DECREMENT = "supports-nx-ttl-decrement";
+
+    public enum SwitchStatus {
+       /** this switch is in the process of being handshaked. Initial State. */
+       HANDSHAKE(false),
+       /** the OF channel to this switch is currently in SLAVE role - the switch will not accept
+        *  state-mutating messages from this controller node.
+        */
+       SLAVE(true),
+       /** the OF channel to this switch is currently in MASTER (or EQUALS) role - the switch is
+        *  controllable from this controller node.
+        */
+       MASTER(true),
+       /** the switch has been sorted out and quarantined by the handshake. It does not show up
+        *  in normal switch listings
+        */
+       QUARANTINED(false),
+       /** the switch has disconnected, and will soon be removed from the switch database */
+       DISCONNECTED(false);
+
+       private final boolean visible;
+
+       SwitchStatus(boolean visible) {
+        this.visible = visible;
+       }
+
+       /** wether this switch is currently visible for normal operation */
+       public boolean isVisible() {
+            return visible;
+       }
+
+       /** wether this switch is currently ready to be controlled by this controller */
+       public boolean isControllable() {
+            return this == MASTER;
+       }
+    }
+
+    SwitchStatus getStatus();
 
     /**
-     * FIXME: remove getChannel(). All access to the channel should be through
-     *        wrapper functions in IOFSwitch
+     * Returns switch features from features Reply
      * @return
      */
-    public Channel getChannel();
+    long getBuffers();
 
     /**
-     * Returns the cached OFFeaturesReply message returned by the switch during
-     * the initial handshake.
+     * Disconnect all the switch's channels and mark the switch as disconnected
+     */
+    void disconnect();
+
+    Set<OFActionType> getActions();
+
+    Set<OFCapabilities> getCapabilities();
+
+    /**
+     * Get the specific TableIds according to the ofp_table_features.
+     * Not all switches have sequential TableIds, so this will give the
+     * specific TableIds used by the switch.
      * @return
      */
-    public OFFeaturesReply getFeaturesReply();
+    Collection<TableId> getTables();
 
     /**
-     * Set the OFFeaturesReply message returned by the switch during initial
-     * handshake.
-     * @param featuresReply
+     * @return a copy of the description statistics for this switch
      */
-    public void setFeaturesReply(OFFeaturesReply featuresReply);
-    
+    SwitchDescription getSwitchDescription();
+
     /**
-     * Set the SwitchProperties based on it's description
-     * @param description
+     * Get the IP address of the remote (switch) end of the connection
+     * @return the inet address
      */
-    public void setSwitchProperties(OFDescriptionStatistics description);    
+    SocketAddress getInetAddress();
 
     /**
      * Get list of all enabled ports. This will typically be different from
@@ -107,9 +143,19 @@ public interface IOFSwitch {
      * snapshot of the ports at the time the switch connected to the controller
      * whereas this port list also reflects the port status messages that have
      * been received.
-     * @return Unmodifiable list of ports
+     * @return Unmodifiable list of ports not backed by the underlying collection
      */
-    public List<OFPhysicalPort> getEnabledPorts();
+    Collection<OFPortDesc> getEnabledPorts();
+
+    /**
+     * Get list of the port numbers of all enabled ports. This will typically
+     * be different from the list of ports in the OFFeaturesReply, since that
+     * one is a static snapshot of the ports at the time the switch connected
+     * to the controller whereas this port list also reflects the port status
+     * messages that have been received.
+     * @return Unmodifiable list of ports not backed by the underlying collection
+     */
+    Collection<OFPort> getEnabledPortNumbers();
 
     /**
      * Retrieve the port object by the port number. The port object
@@ -118,128 +164,87 @@ public interface IOFSwitch {
      * @param portNumber
      * @return port object
      */
-    public OFPhysicalPort getPort(short portNumber);
+    OFPortDesc getPort(OFPort portNumber);
 
     /**
-     * Add or modify a switch port. This is called by the core controller
-     * code in response to a OFPortStatus message. It should not typically be
-     * called by other floodlight applications.
-     * @param port
+     * Retrieve the port object by the port name. The port object
+     * is the one that reflects the port status updates that have been
+     * received, not the one from the features reply.
+     * Port names are case insentive
+     * @param portName
+     * @return port object
      */
-    public void setPort(OFPhysicalPort port);
+    OFPortDesc getPort(String portName);
 
     /**
-     * Delete a port for the switch. This is called by the core controller
-     * code in response to a OFPortStatus message. It should not typically be
-     * called by other floodlight applications.
-     * @param portNumber
+     * Get list of all ports. This will typically be different from
+     * the list of ports in the OFFeaturesReply, since that one is a static
+     * snapshot of the ports at the time the switch connected to the controller
+     * whereas this port list also reflects the port status messages that have
+     * been received.
+     * @return Unmodifiable list of ports
      */
-    public void deletePort(short portNumber);
-    
+    Collection<OFPortDesc> getPorts();
+
     /**
-     * Get the portmap
+     * This is mainly for the benefit of the DB code which currently has the
+     * requirement that list elements be sorted by key. Hopefully soon the
+     * DB will handle the sorting automatically or not require it at all, in
+     * which case we could get rid of this method.
      * @return
      */
-    public Map<Short, OFPhysicalPort> getPorts();
+    Collection<OFPortDesc> getSortedPorts();
 
     /**
      * @param portNumber
      * @return Whether a port is enabled per latest port status message
      * (not configured down nor link down nor in spanning tree blocking state)
      */
-    public boolean portEnabled(short portNumber);
+    boolean portEnabled(OFPort portNumber);
 
     /**
-     * @param port
+     * @param portNumber
      * @return Whether a port is enabled per latest port status message
      * (not configured down nor link down nor in spanning tree blocking state)
      */
-    public boolean portEnabled(OFPhysicalPort port);
+    boolean portEnabled(String portName);
 
     /**
-     * Get the datapathId of the switch
-     * @return
+     * Check is switch is connected
+     * @return Whether or not this switch is connected
      */
-    public long getId();
-
-    /**
-     * Get a string version of the ID for this switch
-     * @return
-     */
-    public String getStringId();
-    
-    /**
-     * Retrieves attributes of this switch
-     * @return
-     */
-    public Map<Object, Object> getAttributes();
+    boolean isConnected();
 
     /**
      * Retrieves the date the switch connected to this controller
      * @return the date
      */
-    public Date getConnectedSince();
+    Date getConnectedSince();
 
     /**
-     * Returns the next available transaction id
+     * Get the datapathId of the switch
      * @return
      */
-    public int getNextTransactionId();
+    DatapathId getId();
 
     /**
-     * Returns a Future object that can be used to retrieve the asynchronous
-     * OFStatisticsReply when it is available.
-     *
-     * @param request statistics request
-     * @return Future object wrapping OFStatisticsReply
-     * @throws IOException 
+     * Retrieves attributes of this switch
+     * @return
      */
-    public Future<List<OFStatistics>> getStatistics(OFStatisticsRequest request)
-            throws IOException;
+    Map<Object, Object> getAttributes();
 
     /**
-     * Check if the switch is still connected;
-     * Only call while holding processMessageLock
-     * @return whether the switch is still disconnected
+     * Check if the switch is active. I.e., the switch is connected to this
+     * controller and is in master role
+     * @return
      */
-    public boolean isConnected();
-    
-    /**
-     * Set whether the switch is connected
-     * Only call while holding modifySwitchLock
-     * @param connected whether the switch is connected
-     */
-    public void setConnected(boolean connected);
-    
+    boolean isActive();
+
     /**
      * Get the current role of the controller for the switch
      * @return the role of the controller
      */
-    public Role getRole();
-    
-    /**
-     * Check if the controller is an active controller for the switch.
-     * The controller is active if its role is MASTER or EQUAL.
-     * @return whether the controller is active
-     */
-    public boolean isActive();
-    
-    /**
-     * Deliver the statistics future reply
-     * @param reply the reply to deliver
-     */
-    public void deliverStatisticsReply(OFMessage reply);
-    
-    /**
-     * Cancel the statistics reply with the given transaction ID
-     * @param transactionId the transaction ID
-     */
-    public void cancelStatisticsReply(int transactionId);
-    
-    /**
-     * Cancel all statistics replies
-     */
-    public void cancelAllStatisticsReplies();
+    OFControllerRole getControllerRole();
 
     /**
      * Checks if a specific switch property exists for this switch
@@ -256,6 +261,16 @@ public interface IOFSwitch {
     Object getAttribute(String name);
 
     /**
+     * Check if the given attribute is present and if so whether it is equal
+     * to "other"
+     * @param name the name of the attribute to check
+     * @param other the object to compare the attribute against.
+     * @return true iff the specified attribute is set and equals() the given
+     * other object.
+     */
+    boolean attributeEquals(String name, Object other);
+
+    /**
      * Set properties for switch specific behavior
      * @param name name of property
      * @param value value for name
@@ -270,43 +285,84 @@ public interface IOFSwitch {
     Object removeAttribute(String name);
 
     /**
-     * Clear all flowmods on this switch
-     */
-    public void clearAllFlowMods();
-
-    /**
-     * Update broadcast cache
-     * @param data
-     * @return true if there is a cache hit
-     *         false if there is no cache hit.
-     */
-    public boolean updateBroadcastCache(Long entry, Short port);
-    
-    /**
-     * Get the portBroadcastCacheHits
+     * Returns a factory object that can be used to create OpenFlow messages.
      * @return
      */
-    public Map<Short, Long> getPortBroadcastHits();
+    OFFactory getOFFactory();
 
     /**
-     * Send a flow statistics request to the switch. This call returns after
-     * sending the stats. request to the switch.
-     * @param request flow statistics request message
-     * @param xid transaction id, must be obtained by using the getXid() API.
-     * @param caller the caller of the API. receive() callback of this 
-     * caller would be called when the reply from the switch is received.
-     * @return the transaction id for the message sent to the switch. The 
-     * transaction id can be used to match the response with the request. Note
-     * that the transaction id is unique only within the scope of this switch.
-     * @throws IOException
+     * Gets the OF connections for this switch instance
+     * @return Collection of IOFConnection
      */
-    public void sendStatsQuery(OFStatisticsRequest request, int xid,
-                            IOFMessageListener caller) throws IOException;
+    ImmutableList<IOFConnection> getConnections();
 
     /**
-     * Flush all flows queued for this switch in the current thread.
-     * NOTE: The contract is limited to the current thread
+     * Writes a message to the connection specified by the logical OFMessage category
+     * @param m an OF Message
+     * @param category the category of the OF Message to be sent
+     * @return true upon success; false upon failure
      */
-     public void flush();
+    boolean write(OFMessage m, LogicalOFMessageCategory category);
 
+    /**
+     * Writes a message list to the connection specified by the logical OFMessage category
+     * @param msglist an OF Message list
+     * @param category the category of the OF Message list to be sent
+     * @return list of failed messages, if any; success denoted by empty list
+     */
+    Iterable<OFMessage> write(Iterable<OFMessage> msglist, LogicalOFMessageCategory category);
+
+    /**
+     * Get a connection specified by the logical OFMessage category
+     * @param category the category for the connection the user desires
+     * @return an OF Connection
+     */
+    OFConnection getConnectionByCategory(LogicalOFMessageCategory category);
+
+    /** write a Stats (Multipart-) request, register for all corresponding reply messages.
+     * Returns a Future object that can be used to retrieve the List of asynchronous
+     * OFStatsReply messages when it is available.
+     *
+     * @param request stats request
+     * @param category the category for the connection that this request should be written to
+     * @return Future object wrapping OFStatsReply
+     *         If the connection is not currently connected, will
+     *         return a Future that immediately fails with a @link{SwitchDisconnectedException}.
+     */
+    <REPLY extends OFStatsReply> ListenableFuture<List<REPLY>> writeStatsRequest(OFStatsRequest<REPLY> request, LogicalOFMessageCategory category);
+
+    /** write an OpenFlow Request message, register for a single corresponding reply message
+     *  or error message.
+     *
+     * @param request
+     * @param categiry the category for the connection that this request should be written to
+     * @return a Future object that can be used to retrieve the asynchrounous
+     *         response when available.
+     *
+     *         If the connection is not currently connected, will
+     *         return a Future that immediately fails with a @link{SwitchDisconnectedException}.
+     */
+    <R extends OFMessage> ListenableFuture<R> writeRequest(OFRequest<R> request, LogicalOFMessageCategory category);
+    
+    /**
+     * Get the features of a particular switch table. The features are cached from
+     * the initial handshake, or, if applicable, from a more recent 
+     * OFTableFeaturesStatsRequest/Reply sent by a user module.
+     * 
+     * @param table, The table of which to get features.
+     * @return The table features or null if no features are known for the table requested.
+     */
+    public TableFeatures getTableFeatures(TableId table);
+
+    /**
+     * Get the number of tables as returned by the ofp_features_reply.
+     * @return
+     */
+	short getNumTables();
+ 
+	/**
+	 * Get the one-way latency from the switch to the controller.
+	 * @return milliseconds
+	 */
+	public U64 getLatency();
 }

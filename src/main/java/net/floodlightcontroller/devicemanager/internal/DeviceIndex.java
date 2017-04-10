@@ -71,8 +71,9 @@ public abstract class DeviceIndex {
      * update will not fail because of a concurrent update 
      * @param device the device to update
      * @param deviceKey the device key for the device
+     * @return 
      */
-    public abstract void updateIndex(Entity entity, Long deviceKey);
+    public abstract boolean updateIndex(Entity entity, Long deviceKey);
 
     /**
      * Remove the entry for the given entity
@@ -102,6 +103,15 @@ public abstract class DeviceIndex {
             IndexedEntity oio = new IndexedEntity(keyFields, o);
             if (oio.equals(ie)) return;
         }
-        removeEntity(entity, deviceKey);
+
+        Iterator<Long> keyiter = this.queryByEntity(entity);
+        while (keyiter.hasNext()) {
+                Long key = keyiter.next();
+                if (key.equals(deviceKey)) {
+                    removeEntity(entity, deviceKey);
+                    break;
+                }
+        }
     }
+
 }

@@ -17,13 +17,15 @@
 
 package net.floodlightcontroller.devicemanager;
 
+import net.floodlightcontroller.core.IListener;
+
 /**
  * Implementors of this interface can receive updates from DeviceManager about
  * the state of devices under its control.
  *
  * @author David Erickson (daviderickson@cs.stanford.edu)
  */
-public interface IDeviceListener {
+public interface IDeviceListener extends IListener<String> {
     /**
      * Called when a new Device is found
      * @param device the device that changed
@@ -52,6 +54,13 @@ public interface IDeviceListener {
      * @param device the device that changed
      */
     public void deviceIPV4AddrChanged(IDevice device);
+    
+    /**
+     * Called when a network address has been added or remove from a device
+     * 
+     * @param device the device that changed
+     */
+    public void deviceIPV6AddrChanged(IDevice device);
     
     /**
      * Called when a VLAN tag for the device has been added or removed

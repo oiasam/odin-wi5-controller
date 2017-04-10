@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.packetstreamer;
 
 import net.floodlightcontroller.packetstreamer.thrift.*;
@@ -42,7 +58,8 @@ public class PacketStreamerHandler implements PacketStreamer.Iface {
     /**
      * The class logger object
      */
-    protected static Logger log = LoggerFactory.getLogger(PacketStreamerServer.class);
+    protected static Logger log = 
+            LoggerFactory.getLogger(PacketStreamerServer.class);
     
     /**
      * A sessionId-to-queue mapping
@@ -74,7 +91,7 @@ public class PacketStreamerHandler implements PacketStreamer.Iface {
             try {
                 Thread.sleep(100);    // Wait 100 ms to check again.
             } catch (InterruptedException e) {
-                log.error(e.toString());
+                log.error("Interrupted while waiting for session start");
             }
         }
 
@@ -86,7 +103,7 @@ public class PacketStreamerHandler implements PacketStreamer.Iface {
 	            packets.add(queue.take());
 	            queue.drainTo(packets);
 	        } catch (InterruptedException e) {
-	            log.error(e.toString());
+	            log.error("Interrupted while waiting for packets");
 	        }
         }
 
@@ -105,7 +122,7 @@ public class PacketStreamerHandler implements PacketStreamer.Iface {
             throws org.apache.thrift.TException {
 
         if (msg == null) {
-            log.error("Error, pushMessageSync: empty message ");
+            log.error("Could not push empty message");
             return 0;
         }
 
@@ -120,7 +137,8 @@ public class PacketStreamerHandler implements PacketStreamer.Iface {
                 pQueue = msgQueues.get(sid);
             }
 
-            log.debug("pushMessageSync: SessionId: " + sid + " Receive a message, " + msg.toString() + "\n");
+            log.debug("pushMessageSync: SessionId: " + sid + 
+                      " Receive a message, " + msg.toString() + "\n");
             ByteBuffer bb = ByteBuffer.wrap(msg.getPacket().getData());
             //ByteBuffer dst = ByteBuffer.wrap(msg.getPacket().toString().getBytes());
             BlockingQueue<ByteBuffer> queue = pQueue.getQueue();

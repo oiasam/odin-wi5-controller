@@ -1,3 +1,19 @@
+/**
+ *    Copyright 2013, Big Switch Networks, Inc.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *    not use this file except in compliance with the License. You may obtain
+ *    a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ *    License for the specific language governing permissions and limitations
+ *    under the License.
+ **/
+
 package net.floodlightcontroller.topology;
 
 import java.util.HashMap;
@@ -5,59 +21,54 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.floodlightcontroller.routing.Link;
+import org.projectfloodlight.openflow.types.DatapathId;
 
-import org.openflow.util.HexString;
+import net.floodlightcontroller.linkdiscovery.Link;
 
 public class Cluster {
-    protected long id; // the lowest id of the nodes
-    protected Map<Long, Set<Link>> links; // set of links connected to a node.
+    protected DatapathId id; // the lowest id of the nodes
+    protected Map<DatapathId, Set<Link>> links; // set of links connected to a node.
 
     public Cluster() {
-        id = Long.MAX_VALUE;
-        links = new HashMap<Long, Set<Link>>();
+        id = DatapathId.NONE;
+        links = new HashMap<DatapathId, Set<Link>>();
     }
 
-    public long getId() {
+    public DatapathId getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(DatapathId id) {
         this.id = id;
     }
 
-    public Map<Long, Set<Link>> getLinks() {
+    public Map<DatapathId, Set<Link>> getLinks() {
         return links;
     }
 
-    public Set<Long> getNodes() {
+    public Set<DatapathId> getNodes() {
         return links.keySet();
     }
 
-    void add(long n) {
+    void add(DatapathId n) {
         if (links.containsKey(n) == false) {
             links.put(n, new HashSet<Link>());
-            if (n < id) id = n;
+			if (id == DatapathId.NONE || n.getLong() < id.getLong()) 
+				id = n ;
         }
     }
 
     void addLink(Link l) {
-        if (links.containsKey(l.getSrc()) == false) {
-            links.put(l.getSrc(), new HashSet<Link>());
-            if (l.getSrc() < id) id = l.getSrc();
-        }
+        add(l.getSrc());
         links.get(l.getSrc()).add(l);
 
-        if (links.containsKey(l.getDst()) == false) {
-            links.put(l.getDst(), new HashSet<Link>());
-            if (l.getDst() < id) id = l.getDst();
-        }
+        add(l.getDst());
         links.get(l.getDst()).add(l);
      }
 
     @Override 
     public int hashCode() {
-        return (int) (id + id >>>32);
+        return (int) (id.getLong() + id.getLong() >>>32);
     }
 
     @Override
@@ -70,10 +81,10 @@ public class Cluster {
             return false;
 
         Cluster other = (Cluster) obj;
-        return (this.id == other.id);
+        return (this.id.equals(other.id));
     }
     
     public String toString() {
-        return "[Cluster id=" + HexString.toHexString(id) + ", " + links.keySet() + "]";
+        return "[Cluster id=" + id.toString() + ", " + links.keySet() + "]";
     }
 }
