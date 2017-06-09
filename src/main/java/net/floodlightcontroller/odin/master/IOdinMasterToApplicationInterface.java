@@ -1,12 +1,13 @@
 package net.floodlightcontroller.odin.master;
 
 import java.net.InetAddress;
-import java.util.List;
+//import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import net.floodlightcontroller.odin.master.OdinClient;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 interface IOdinMasterToApplicationInterface {
 
@@ -16,7 +17,7 @@ interface IOdinMasterToApplicationInterface {
 	 * @param newApIpAddr IPv4 address of new access point
 	 * @param hwAddrSta Ethernet address of STA to be handed off
 	 */
-	void handoffClientToAp (String pool, MACAddress staHwAddr, InetAddress newApIpAddr);
+	void handoffClientToAp (String pool, MacAddress staHwAddr, InetAddress newApIpAddr);
 
 	
 	/**
@@ -28,18 +29,18 @@ interface IOdinMasterToApplicationInterface {
 	
 	
 	/**
-	 * Get the OdinClient type from the client's MACAddress
+	 * Get the OdinClient type from the client's MacAddress
 	 * 
 	 * @param pool that the invoking application corresponds to
 	 * @return a OdinClient instance corresponding to clientHwAddress
 	 */
-	OdinClient getClientFromHwAddress (String pool, MACAddress clientHwAddress);
+	OdinClient getClientFromHwAddress (String pool, MacAddress clientHwAddress);
 	
 	long getLastHeardFromAgent (String pool, InetAddress agentAddr);
 
-	Map<MACAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr);
+	Map<MacAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr);
 	
-	Map<MACAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr);
+	Map<MacAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr);
 	
 	/**
 	 * Get a list of Odin agents from the agent tracker
@@ -119,7 +120,7 @@ interface IOdinMasterToApplicationInterface {
 	 * @param Channel
 	 * @author Luis Sequeira <sequeira@unizar.es>
 	 */
-	//void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MACAddress clientHwAddr, List<String> lvapSsids, int channel);
+	//void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MacAddress clientHwAddr, List<String> lvapSsids, int channel);
 	
 	/**
 	 * Scanning for a client in a specific agent (AP)
@@ -132,7 +133,7 @@ interface IOdinMasterToApplicationInterface {
 	 * @return Signal power
 	 * @author Luis Sequeira <sequeira@unizar.es>
 	 */
-	int scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel, int time);	
+	int scanClientFromAgent (String pool, InetAddress agentAddr, MacAddress clientHwAddr, int channel, int time);	
 
 
 }

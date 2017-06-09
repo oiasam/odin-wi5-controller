@@ -8,7 +8,8 @@ import net.floodlightcontroller.odin.master.IOdinMasterToApplicationInterface;
 import net.floodlightcontroller.odin.master.NotificationCallback;
 import net.floodlightcontroller.odin.master.OdinClient;
 import net.floodlightcontroller.odin.master.OdinEventSubscription;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 
 /**
@@ -54,7 +55,7 @@ public abstract class OdinApplication implements Runnable {
 	 * @param newApIpAddr IPv4 address of new access point
 	 * @param hwAddrSta Ethernet address of STA to be handed off
 	 */
-	protected final void handoffClientToAp (MACAddress staHwAddr, InetAddress newApIpAddr) {
+	protected final void handoffClientToAp (MacAddress staHwAddr, InetAddress newApIpAddr) {
 		odinApplicationInterfaceToMaster.handoffClientToAp(pool, staHwAddr, newApIpAddr);
 	}
 
@@ -70,11 +71,11 @@ public abstract class OdinApplication implements Runnable {
 	
 	
 	/**
-	 * Get the OdinClient type from the client's MACAddress
+	 * Get the OdinClient type from the client's MacAddress
 	 * 
 	 * @return a OdinClient instance corresponding to clientHwAddress
 	 */
-	protected final OdinClient getClientFromHwAddress (MACAddress clientHwAddress) {
+	protected final OdinClient getClientFromHwAddress (MacAddress clientHwAddress) {
 		return odinApplicationInterfaceToMaster.getClientFromHwAddress(pool, clientHwAddress);
 	}
 	
@@ -95,7 +96,7 @@ public abstract class OdinApplication implements Runnable {
 	 * 
 	 * @return Key-Value entries of each recorded statistic for each client 
 	 */
-	protected final Map<MACAddress, Map<String, String>> getTxStatsFromAgent (InetAddress agentAddr) {
+	protected final Map<MacAddress, Map<String, String>> getTxStatsFromAgent (InetAddress agentAddr) {
 		return odinApplicationInterfaceToMaster.getTxStatsFromAgent(pool, agentAddr);
 	}
 	
@@ -106,7 +107,7 @@ public abstract class OdinApplication implements Runnable {
 	 * 
 	 * @return Key-Value entries of each recorded statistic for each client 
 	 */
-	protected final Map<MACAddress, Map<String, String>> getRxStatsFromAgent (InetAddress agentAddr) {
+	protected final Map<MacAddress, Map<String, String>> getRxStatsFromAgent (InetAddress agentAddr) {
 		return odinApplicationInterfaceToMaster.getRxStatsFromAgent(pool, agentAddr);
 	}
 	
@@ -196,7 +197,7 @@ public abstract class OdinApplication implements Runnable {
 	 * @param SSID
 	 * @param Channel
 	 */
-	/*protected final void sendChannelSwitchToClient (InetAddress agentAddr, MACAddress clientHwAddr, String ssid, int channel){
+	/*protected final void sendChannelSwitchToClient (InetAddress agentAddr, MacAddress clientHwAddr, String ssid, int channel){
 		odinApplicationInterfaceToMaster.sendChannelSwitchToClient(pool, agentAddr, clientHwAddr, ssid, channel);
 	}*/
 	
@@ -209,7 +210,7 @@ public abstract class OdinApplication implements Runnable {
 	 * @param Scanning time
 	 * @return Signal power
 	 */
-	protected final int scanClientFromAgent (InetAddress agentAddr, MACAddress clientHwAddr, int channel, int time){
+	protected final int scanClientFromAgent (InetAddress agentAddr, MacAddress clientHwAddr, int channel, int time){
 		return odinApplicationInterfaceToMaster.scanClientFromAgent(pool, agentAddr, clientHwAddr, channel, time);
 	}
 

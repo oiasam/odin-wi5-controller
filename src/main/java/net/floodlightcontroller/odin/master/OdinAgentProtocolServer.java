@@ -7,12 +7,13 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+//import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 class OdinAgentProtocolServer implements Runnable {
     protected static Logger log = LoggerFactory.getLogger(OdinAgentProtocolServer.class);
@@ -69,19 +70,19 @@ class OdinAgentProtocolServer implements Runnable {
 		odinMaster.receivePing(odinAgentAddr);
 	}
 
-	private void receiveProbe (final InetAddress odinAgentAddr, final MACAddress clientHwAddress, final String ssid) {
+	private void receiveProbe (final InetAddress odinAgentAddr, final MacAddress clientHwAddress, final String ssid) {
 		odinMaster.receiveProbe(odinAgentAddr, clientHwAddress, ssid);
 	}
 
-	private void receivePublish (final MACAddress clientHwAddress, final InetAddress odinAgentAddr, final Map<Long, Long> subscriptionIds) {
+	private void receivePublish (final MacAddress clientHwAddress, final InetAddress odinAgentAddr, final Map<Long, Long> subscriptionIds) {
 		odinMaster.receivePublish(clientHwAddress, odinAgentAddr, subscriptionIds);
 	}
 
-    private void receiveDeauth (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+    private void receiveDeauth (final InetAddress odinAgentAddr, final MacAddress clientHwAddress) {
         odinMaster.receiveDeauth(odinAgentAddr, clientHwAddress);
     }
 
-    private void receiveAssoc (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+    private void receiveAssoc (final InetAddress odinAgentAddr, final MacAddress clientHwAddress) {
         odinMaster.receiveAssoc(odinAgentAddr, clientHwAddress);
     }
 
@@ -113,7 +114,7 @@ class OdinAgentProtocolServer implements Runnable {
             		             ssid = msg.substring(ODIN_MSG_PROBE.length() + staAddress.length() + 2);
             	       }
 
-            	       receiveProbe(odinAgentAddr, MACAddress.valueOf(staAddress), ssid);
+            	       receiveProbe(odinAgentAddr, MacAddress.of(staAddress), ssid);
                 }
                 else if (msg_type.equals(ODIN_MSG_PUBLISH)) {
             	       final String staAddress = fields[1];
@@ -125,17 +126,17 @@ class OdinAgentProtocolServer implements Runnable {
             				     Long.parseLong(fields[3 + i].split(":")[1]));
             	       }
 
-            	       receivePublish(MACAddress.valueOf(staAddress), odinAgentAddr, matchingIds);
+            	       receivePublish(MacAddress.of(staAddress), odinAgentAddr, matchingIds);
 
                 }else if(msg_type.equals(ODIN_MSG_DEAUTH)){
 
                        final String staAddress = fields[1];
-                       receiveDeauth(odinAgentAddr, MACAddress.valueOf(staAddress));
+                       receiveDeauth(odinAgentAddr, MacAddress.of(staAddress));
 
                 }else if(msg_type.equals(ODIN_MSG_ASSOC)){
 
                        final String staAddress = fields[1];
-                       receiveAssoc(odinAgentAddr, MACAddress.valueOf(staAddress));
+                       receiveAssoc(odinAgentAddr, MacAddress.of(staAddress));
 
                 }
 	     }

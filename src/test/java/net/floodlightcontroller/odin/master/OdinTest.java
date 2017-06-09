@@ -35,12 +35,14 @@ import net.floodlightcontroller.odin.master.OdinMaster;
 import net.floodlightcontroller.odin.master.PoolManager;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.restserver.RestApiServer;
-import net.floodlightcontroller.staticflowentry.StaticFlowEntryPusher;
+import net.floodlightcontroller.staticentry.StaticEntryPusher;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 import org.easymock.EasyMock;
-import org.jboss.netty.channel.Channel;
+//import org.jboss.netty.channel.Channel;
+import io.netty.channel.Channel;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,7 +54,7 @@ public class OdinTest {
     protected ClientManager clientManager;
     protected LvapManager lvapManager;
     protected PoolManager poolManager;
-    protected StaticFlowEntryPusher staticFlowEntryPusher;
+    protected StaticEntryPusher staticFlowEntryPusher;
     protected long switchId = 1L;
     
     /**
@@ -85,7 +87,7 @@ public class OdinTest {
 
         // Update the switch map
         mockFloodlightProvider.getSwitches().put(id, sw1);
-
+        
         // Let's try again
         agentManager.receivePing(InetAddress.getByName(ipAddress));
         
@@ -94,7 +96,7 @@ public class OdinTest {
         assertEquals(agentManager.getAgents().get(InetAddress.getByName(ipAddress)).getSwitch(), sw1);
     }
     
-    private void addClientToClientManagerSingleSsid (MACAddress sta, InetAddress inetAddr, MACAddress lvapBssid, String ssid) {
+    private void addClientToClientManagerSingleSsid (MacAddress sta, InetAddress inetAddr, MacAddress lvapBssid, String ssid) {
     	ArrayList<String> ssidList = new ArrayList<String> ();
     	ssidList.add(ssid);
     	Lvap lvap = new Lvap (lvapBssid, ssidList);
@@ -147,26 +149,26 @@ public class OdinTest {
     @Test
     public void testClientTracker() throws Exception {
     	assertEquals(clientManager.getClients().size(),0);
-    	addClientToClientManagerSingleSsid(MACAddress.valueOf("00:00:00:00:00:01"),
+    	addClientToClientManagerSingleSsid(MacAddress.of("00:00:00:00:00:01"),
 								 InetAddress.getByName("172.17.1.1"),
-								 MACAddress.valueOf("00:00:00:00:00:01"),
+								 MacAddress.of("00:00:00:00:00:01"),
 								 "odin");
 		
 		assertEquals(clientManager.getClients().size(),1);
-		addClientToClientManagerSingleSsid(MACAddress.valueOf("00:00:00:00:00:01"),
+		addClientToClientManagerSingleSsid(MacAddress.of("00:00:00:00:00:01"),
 								 InetAddress.getByName("172.17.1.2"),
-								 MACAddress.valueOf("00:00:00:00:00:02"),
+								 MacAddress.of("00:00:00:00:00:02"),
 								 "odin");
 		assertEquals(clientManager.getClients().size(),1); // Same hw-addr cant exist twice
 
 		// TODO: None of the other parameters should repeat either!
-		clientManager.removeClient(MACAddress.valueOf("00:00:00:00:00:02"));
+		clientManager.removeClient(MacAddress.of("00:00:00:00:00:02"));
 		assertEquals(clientManager.getClients().size(),1);
 		
-		clientManager.removeClient(MACAddress.valueOf("00:00:00:00:00:01"));
+		clientManager.removeClient(MacAddress.of("00:00:00:00:00:01"));
 		assertEquals(clientManager.getClients().size(),0);
 		
-		clientManager.removeClient(MACAddress.valueOf("00:00:00:00:00:01"));
+		clientManager.removeClient(MacAddress.of("00:00:00:00:00:01"));
 		assertEquals(clientManager.getClients().size(),0);
     }
     
@@ -227,9 +229,9 @@ public class OdinTest {
     	String ipAddress1 = "172.17.2.161";
     	String ipAddress2 = "172.17.2.162";
     	String ipAddress3 = "172.17.2.163";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
-    	MACAddress clientMacAddr2 = MACAddress.valueOf("00:00:00:00:00:02");
-    	MACAddress clientMacAddr3 = MACAddress.valueOf("00:00:00:00:00:03");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
+    	MacAddress clientMacAddr2 = MacAddress.of("00:00:00:00:00:02");
+    	MacAddress clientMacAddr3 = MacAddress.of("00:00:00:00:00:03");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addPoolForAgent(InetAddress.getByName(ipAddress2), "pool-1");
@@ -248,7 +250,7 @@ public class OdinTest {
     	
     	// 2. Client should be added
     	assertEquals(clientManager.getClients().size(), 1);
-    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MACAddress.valueOf("00:00:00:00:11:11"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MacAddress.of("00:00:00:00:11:11"), "odin");
     	assertEquals(clientManager.getClients().get(clientMacAddr1).getLvap().getAgent(), null);
     	
     	// 3, 4. now try again. Client should be assigned an AP
@@ -275,7 +277,7 @@ public class OdinTest {
     	assertEquals(clientManager.getClients().size(), 2);
     	
     	// 8. Add client2
-    	addClientToClientManagerSingleSsid(clientMacAddr2, InetAddress.getByName("172.17.2.52"), MACAddress.valueOf("00:00:00:00:11:12"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr2, InetAddress.getByName("172.17.2.52"), MacAddress.of("00:00:00:00:11:12"), "odin");
     	assertEquals(clientManager.getClients().size(), 2);
     	assertEquals(clientManager.getClients().get(clientMacAddr2).getLvap().getAgent(), null);
     	
@@ -295,7 +297,7 @@ public class OdinTest {
     	assertEquals(clientManager.getClients().size(), 2);
     	
     	// 11. Add client3
-    	addClientToClientManagerSingleSsid(clientMacAddr3, InetAddress.getByName("172.17.2.53"), MACAddress.valueOf("00:00:00:00:11:13"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr3, InetAddress.getByName("172.17.2.53"), MacAddress.of("00:00:00:00:11:13"), "odin");
     	assertEquals(clientManager.getClients().size(), 3);
     	assertEquals(clientManager.getClients().get(clientMacAddr3).getLvap().getAgent(), null);
 
@@ -331,7 +333,7 @@ public class OdinTest {
     	String ipAddress2 = "172.17.2.162";
     	String ipAddress3 = "172.17.2.163";
     	String ipAddress4 = "172.17.2.164";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	odinMaster.receiveProbe(InetAddress.getByName(ipAddress4), clientMacAddr1, ""); // Shouldn't break anything
     	odinMaster.receiveProbe(InetAddress.getByName(ipAddress4), clientMacAddr1, null);
@@ -409,8 +411,8 @@ public class OdinTest {
     	String ipAddress3 = "172.17.2.163";
     	String ipAddress4 = "172.17.2.164";
     	
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
-    	MACAddress clientMacAddr2 = MACAddress.valueOf("00:00:00:00:00:02");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
+    	MacAddress clientMacAddr2 = MacAddress.of("00:00:00:00:00:02");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addPoolForAgent(InetAddress.getByName(ipAddress2), "pool-1");
@@ -423,7 +425,7 @@ public class OdinTest {
     	odinMaster.handoffClientToAp(null, null, null);
         
     	
-    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MACAddress.valueOf("00:00:00:00:11:11"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MacAddress.of("00:00:00:00:11:11"), "odin");
     	
   	
     	addAgentWithMockSwitch(ipAddress1, 12345);
@@ -486,7 +488,7 @@ public class OdinTest {
     	
     	// now register the client
     	// FIXME: Should account for pools as well
-    	addClientToClientManagerSingleSsid(clientMacAddr2, InetAddress.getByName("172.17.2.52"), MACAddress.valueOf("00:00:00:00:11:12"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr2, InetAddress.getByName("172.17.2.52"), MacAddress.of("00:00:00:00:11:12"), "odin");
     	assertNotNull(clientManager.getClients().get(clientMacAddr2));
     	assertNull(clientManager.getClients().get(clientMacAddr2).getLvap().getAgent());
     	
@@ -525,7 +527,7 @@ public class OdinTest {
     	String ipAddress4 = "172.17.2.164";
     	String ipAddress5 = "172.17.2.165";
     	
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addPoolForAgent(InetAddress.getByName(ipAddress2), "pool-1");
@@ -604,8 +606,8 @@ public class OdinTest {
     public void testAgentLeave() throws Exception {
     	String ipAddress1 = "172.17.2.161";
     	String ipAddress2 = "172.17.2.162";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
-    	MACAddress clientMacAddr2 = MACAddress.valueOf("00:00:00:00:00:02");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
+    	MacAddress clientMacAddr2 = MacAddress.of("00:00:00:00:00:02");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addPoolForAgent(InetAddress.getByName(ipAddress2), "pool-1");
@@ -615,7 +617,7 @@ public class OdinTest {
     	
     	// Add an agent and associate a client to it
     	addAgentWithMockSwitch(ipAddress1, 12345);
-    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MACAddress.valueOf("00:00:00:00:11:11"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MacAddress.of("00:00:00:00:11:11"), "odin");
     	odinMaster.receiveProbe(InetAddress.getByName(ipAddress1), clientMacAddr1, "odin");
     	
     	// There should be an agent, and a client recorded at the master
@@ -671,7 +673,7 @@ public class OdinTest {
     	ssidList.add("odin");
     	ssidList.add("odin-1");
     	ssidList.add("odin-2");
-    	Lvap lvap = new Lvap (MACAddress.valueOf("00:00:00:00:11:12"), ssidList);
+    	Lvap lvap = new Lvap (MacAddress.of("00:00:00:00:11:12"), ssidList);
     	OdinClient oc = new OdinClient(clientMacAddr2, InetAddress.getByName("172.17.1.52"), lvap);
     	lvapList.add(oc);
         OdinAgentFactory.setOdinAgentType("MockOdinAgent");
@@ -699,7 +701,7 @@ public class OdinTest {
 
     	String ipAddress1 = "172.17.2.161";
     	String ipAddress2 = "172.17.2.162";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addPoolForAgent(InetAddress.getByName(ipAddress2), "pool-1");
@@ -710,7 +712,7 @@ public class OdinTest {
  
     	// Add an agent and associate a client to it
     	addAgentWithMockSwitch(ipAddress1, 12345);
-    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MACAddress.valueOf("00:00:00:00:11:11"), "odin");
+    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MacAddress.of("00:00:00:00:11:11"), "odin");
     	odinMaster.receiveProbe(InetAddress.getByName(ipAddress1), clientMacAddr1, "odin");
     	
     	assertEquals(clientManager.getClients().size(), 1);
@@ -720,7 +722,7 @@ public class OdinTest {
     	List<OdinClient> lvapList = new ArrayList<OdinClient>();
     	ArrayList<String> ssidList = new ArrayList<String> ();
     	ssidList.add("odin");
-    	Lvap lvap = new Lvap (MACAddress.valueOf("00:00:00:00:11:11"), ssidList);
+    	Lvap lvap = new Lvap (MacAddress.of("00:00:00:00:11:11"), ssidList);
     	OdinClient oc = new OdinClient(clientMacAddr1, InetAddress.getByName("172.17.2.51"), lvap);
     	lvapList.add(oc);
         OdinAgentFactory.setOdinAgentType("MockOdinAgent");
@@ -745,7 +747,7 @@ public class OdinTest {
     public void testPostFailureLvapSync() throws Exception {
 
     	String ipAddress1 = "172.17.2.161";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addNetworkForPool("pool-1", "odin");
@@ -759,7 +761,7 @@ public class OdinTest {
     	ssidList.add("odin");
     	ssidList.add("odin-1");
     	ssidList.add("odin-2");
-    	Lvap lvap = new Lvap (MACAddress.valueOf("00:00:00:00:11:11"), ssidList);
+    	Lvap lvap = new Lvap (MacAddress.of("00:00:00:00:11:11"), ssidList);
     	OdinClient oc = new OdinClient(clientMacAddr1, InetAddress.getByName("172.17.2.51"), lvap);
     	lvapList.add(oc);
         OdinAgentFactory.setOdinAgentType("MockOdinAgent");
@@ -804,7 +806,7 @@ public class OdinTest {
     	app1.run(); // This isn't really a thread, but sets up callbacks
     	
     	String ipAddress1 = "172.17.2.161";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addNetworkForPool("pool-1", "odin");
 		
@@ -952,7 +954,7 @@ public class OdinTest {
     	
 
     	String ipAddress1 = "172.17.2.161";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addNetworkForPool("pool-1", "odin");
@@ -1056,7 +1058,7 @@ public class OdinTest {
     	app1.run(); // This isn't really a thread, but sets up callbacks
     	
     	String ipAddress1 = "172.17.2.161";
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	
     	poolManager.addPoolForAgent(InetAddress.getByName(ipAddress1), "pool-1");
 		poolManager.addNetworkForPool("pool-1", "odin");
@@ -1108,15 +1110,15 @@ public class OdinTest {
 //    	
 //    	Class target = Class.forName("net.floodlightcontroller.odinmaster.LvapManagerImpl");
 //    
-//    	Class[] paramTypes = {MACAddress.class};
+//    	Class[] paramTypes = {MacAddress.class};
 //    	Method method = target.getDeclaredMethod("assignLvapWithNullIp", paramTypes);
 //    	method.setAccessible(true);
 // 
-//    	Object[] parameters = { MACAddress.valueOf("00:00:00:00:00:01") };
+//    	Object[] parameters = { MacAddress.of("00:00:00:00:00:01") };
 //    	
 //    	OdinClient oc1 = (OdinClient) method.invoke(lvapManager, parameters);
 //    	
-//    	parameters[0] = MACAddress.valueOf("00:00:00:00:00:02");
+//    	parameters[0] = MacAddress.of("00:00:00:00:00:02");
 //    	
 //    	OdinClient oc2 = (OdinClient) method.invoke(lvapManager, parameters);
 //    	
@@ -1379,10 +1381,10 @@ public class OdinTest {
     	addAgentWithMockSwitch("172.17.2.166", 12345);
     	addAgentWithMockSwitch("172.17.2.167", 12345);
     	
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
-    	MACAddress clientMacAddr2 = MACAddress.valueOf("00:00:00:00:00:02");
-    	MACAddress clientMacAddr3 = MACAddress.valueOf("00:00:00:00:00:03");
-    	MACAddress clientMacAddr4 = MACAddress.valueOf("00:00:00:00:00:04");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
+    	MacAddress clientMacAddr2 = MacAddress.of("00:00:00:00:00:02");
+    	MacAddress clientMacAddr3 = MacAddress.of("00:00:00:00:00:03");
+    	MacAddress clientMacAddr4 = MacAddress.of("00:00:00:00:00:04");
     	
     	odinMaster.receiveProbe(ipaddr1, clientMacAddr1, "odin");
     	
@@ -1498,8 +1500,8 @@ public class OdinTest {
     	app.setOdinInterface(odinMaster);
     	app.setPool("pool-1");
     	
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");    	
-    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MACAddress.valueOf("00:00:00:00:11:11"), "odin");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");    	
+    	addClientToClientManagerSingleSsid(clientMacAddr1, InetAddress.getByName("172.17.2.51"), MacAddress.of("00:00:00:00:11:11"), "odin");
   	
     	addAgentWithMockSwitch(ipAddress1, 12345);
     	addAgentWithMockSwitch(ipAddress2, 12345);
@@ -1546,7 +1548,7 @@ public class OdinTest {
     
     /************* Mobility Manager Tests ******************/
     
-    private void triggerSingleEvent (MACAddress clientMacAddr, InetAddress agentAddr, long id, long value) {
+    private void triggerSingleEvent (MacAddress clientMacAddr, InetAddress agentAddr, long id, long value) {
     	// The app's subscription would be id 1
     	Map<Long, Long> subscriptionIds = new HashMap<Long, Long>();
     	subscriptionIds.put(id, value);
@@ -1578,7 +1580,7 @@ public class OdinTest {
 		poolManager.addPoolForAgent(agentAddr2, "pool-1");
 		poolManager.addNetworkForPool("pool-1", "odin");    	
     	
-    	MACAddress clientMacAddr1 = MACAddress.valueOf("00:00:00:00:00:01");
+    	MacAddress clientMacAddr1 = MacAddress.of("00:00:00:00:00:01");
     	agentManager.setAgentTimeout(3000);
     	
     	// Add an agent with no clients associated

@@ -12,16 +12,17 @@ import net.floodlightcontroller.odin.master.NotificationCallback;
 import net.floodlightcontroller.odin.master.NotificationCallbackContext;
 import net.floodlightcontroller.odin.master.OdinClient;
 import net.floodlightcontroller.odin.master.OdinEventSubscription;
-import net.floodlightcontroller.odin.master.OdinMaster;
+//import net.floodlightcontroller.odin.master.OdinMaster;
 import net.floodlightcontroller.odin.master.OdinEventSubscription.Relation;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 public class OdinMobilityManager extends OdinApplication {
 	protected static Logger log = LoggerFactory.getLogger(OdinMobilityManager.class);
 
 	// a table including each client and its mobility statistics
 
-	private ConcurrentMap<MACAddress, MobilityStats> clientMap = new ConcurrentHashMap<MACAddress, MobilityStats> ();
+	private ConcurrentMap<MacAddress, MobilityStats> clientMap = new ConcurrentHashMap<MacAddress, MobilityStats> ();
 	private final long HYSTERESIS_THRESHOLD; // milliseconds
 	private final long IDLE_CLIENT_THRESHOLD; // milliseconds
 	private final long SIGNAL_STRENGTH_THRESHOLD; // dbm

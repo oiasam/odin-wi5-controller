@@ -1,6 +1,7 @@
 package net.floodlightcontroller.odin.master;
 
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 
 /**
@@ -71,7 +72,7 @@ public class OdinEventSubscription {
 	public void setSubscription (String client, String stat, Relation rel, double val) {
 		// Sanity checking
 		try {
-			MACAddress.valueOf(client);
+			MacAddress.of(client);
 		} catch (IllegalArgumentException e) {
 			if (!client.equals(WILD_CARD)) {
 				throw new IllegalArgumentException();

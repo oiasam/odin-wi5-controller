@@ -2,6 +2,7 @@ package net.floodlightcontroller.odin.master;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.internal.IOFSwitchService;
 import net.floodlightcontroller.odin.master.IOdinAgent;
 import net.floodlightcontroller.odin.master.OdinAgentFactory;
 import net.floodlightcontroller.odin.master.OdinClient;
@@ -25,6 +27,7 @@ class AgentManager {
     protected static Logger log = LoggerFactory.getLogger(OdinMaster.class);
 
     private IFloodlightProviderService floodlightProvider;
+    private IOFSwitchService switchService;
     private final ClientManager clientManager;
     private final PoolManager poolManager;
 
@@ -39,6 +42,10 @@ class AgentManager {
 	protected void setFloodlightProvider(final IFloodlightProviderService provider) {
     	floodlightProvider = provider;
     }
+	
+	protected void setSwitchService(final IOFSwitchService service) {
+		switchService = service;
+	}
 
 
     protected void setAgentTimeout (final int timeout) {
@@ -124,14 +131,19 @@ class AgentManager {
 		 * We avoid registering the agent until its corresponding
 		 * OFSwitch has done so.
 		 */
-		for (IOFSwitch sw: floodlightProvider.getSwitches().values()) {
+		//for (IOFSwitch sw: floodlightProvider.getSwitches().values()) {
+    	for (IOFSwitch sw: switchService.getAllSwitchMap().values()) {
 
 			/*
 			 * We're binding by IP addresses now, because we want to pool
 			 * an OFSwitch with its corresponding OdinAgent, if any.
 			 */
-			String switchIpAddr = ((InetSocketAddress) sw.getChannel().getRemoteAddress()).getAddress().getHostAddress();
-
+			//String switchIpAddr = ((InetSocketAddress) sw.getChannel().getRemoteAddress()).getAddress().getHostAddress();
+    		SocketAddress tSwitchIpAddr = sw.getInetAddress();
+    		
+    		assert tSwitchIpAddr instanceof InetSocketAddress;
+    		String switchIpAddr = ((InetSocketAddress) tSwitchIpAddr).getAddress().getHostAddress();
+			
 			if (switchIpAddr.equals(odinAgentAddr.getHostAddress())) {
 				ofSwitch = sw;
 				break;

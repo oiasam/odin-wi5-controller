@@ -3,9 +3,11 @@ package net.floodlightcontroller.odin.master;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
-import org.openflow.protocol.OFMessage;
+//import org.openflow.protocol.OFMessage;
 
 /**
  * This class represents an LVAP that comprises a
@@ -15,13 +17,13 @@ import org.openflow.protocol.OFMessage;
  *
  */
 public class Lvap {
-	private final MACAddress lvapBssid;
+	private final MacAddress lvapBssid;
 	private final List<String> lvapSsids;
 	private IOdinAgent odinAgent;
 	private List<OFMessage> msgList = new ArrayList<OFMessage>();
 	private boolean assocState;
 
-	Lvap(MACAddress bssid, List<String> ssidList) {
+	Lvap(MacAddress bssid, List<String> ssidList) {
 		lvapBssid = bssid;
 		lvapSsids = ssidList;
 	}
@@ -40,7 +42,7 @@ public class Lvap {
 		this.assocState = state;
 	}
 
-	public MACAddress getBssid() {
+	public MacAddress getBssid() {
 		return lvapBssid;
 	}
 

@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import net.floodlightcontroller.core.IOFSwitch;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 @JsonSerialize(using=OdinAgentSerializer.class)
 public interface IOdinAgent {
@@ -45,7 +47,7 @@ public interface IOdinAgent {
 	 *  @return A map of stations' MAC addresses to a map
 	 *  of properties and values.
 	 */
-	public Map<MACAddress, Map<String, String>> getTxStats ();
+	public Map<MacAddress, Map<String, String>> getTxStats ();
 
 	
 	/**
@@ -54,7 +56,7 @@ public interface IOdinAgent {
 	 *  @return A map of stations' MAC addresses to a map
 	 *  of properties and values.
 	 */
-	public Map<MACAddress, Map<String, String>> getRxStats ();
+	public Map<MacAddress, Map<String, String>> getRxStats ();
 	
 	
 	/**
@@ -115,7 +117,7 @@ public interface IOdinAgent {
 	public void updateClientLvap(OdinClient oc);
 	
 	
-	public void sendProbeResponse(MACAddress clientHwAddr, MACAddress bssid, Set<String> ssidLists);
+	public void sendProbeResponse(MacAddress clientHwAddr, MacAddress bssid, Set<String> ssidLists);
 	
 	/**
 	 * Returns timestamp of last heartbeat from agent
@@ -169,7 +171,7 @@ public interface IOdinAgent {
 	 * @author Luis Sequeira <sequeira@unizar.es>
 	 * 
 	 */
-	public void sendChannelSwitch(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList, int channel);
+	public void sendChannelSwitch(MacAddress clientHwAddr, MacAddress bssid, List<String> ssidList, int channel);
 	
 	
 	/**
@@ -201,6 +203,6 @@ public interface IOdinAgent {
 	 * @return Signal power
 	 * 
 	 */
-	public int scanClient (MACAddress clientHwAddr, int channel, int time);
+	public int scanClient (MacAddress clientHwAddr, int channel, int time);
 	
 }

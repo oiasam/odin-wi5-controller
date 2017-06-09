@@ -4,13 +4,22 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
+
+
+//import org.codehaus.jackson.JsonParseException;
+//import org.codehaus.jackson.map.JsonMappingException;
+//import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
+
+
 
 public class LvapHandoffResource extends ServerResource {
 	@SuppressWarnings("unchecked")
@@ -29,7 +38,7 @@ public class LvapHandoffResource extends ServerResource {
 	        String apIpAddress= fmdata.get("apIpAddress");
 	        String poolName = fmdata.get("poolName");
 	    
-	        oc.handoffClientToAp(poolName, MACAddress.valueOf(staHwAddress), InetAddress.getByName(apIpAddress));
+	        oc.handoffClientToAp(poolName, MacAddress.of(staHwAddress), InetAddress.getByName(apIpAddress));
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

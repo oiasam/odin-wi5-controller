@@ -9,7 +9,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.odin.master.IOdinAgent;
 import net.floodlightcontroller.odin.master.OdinClient;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 /**
  * 
@@ -41,12 +42,12 @@ class StubOdinAgent implements IOdinAgent {
 	}
 	
 	@Override
-	public Map<MACAddress, Map<String, String>> getTxStats() {
+	public Map<MacAddress, Map<String, String>> getTxStats() {
 		return null;
 	}
 	
 	@Override
-	public Map<MACAddress, Map<String, String>> getRxStats() {
+	public Map<MacAddress, Map<String, String>> getRxStats() {
 		return null;
 	}
 
@@ -101,7 +102,7 @@ class StubOdinAgent implements IOdinAgent {
 	}
 
 	@Override
-	public void sendProbeResponse(MACAddress clientHwAddr, MACAddress bssid,
+	public void sendProbeResponse(MacAddress clientHwAddr, MacAddress bssid,
 			Set<String> ssidLists) {
 	}
 	
@@ -115,7 +116,7 @@ class StubOdinAgent implements IOdinAgent {
 	}
 	
 	@Override
-	public void sendChannelSwitch(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList, int channel){
+	public void sendChannelSwitch(MacAddress clientHwAddr, MacAddress bssid, List<String> ssidList, int channel){
 		// Do nothing.
 	}
 	
@@ -130,7 +131,7 @@ class StubOdinAgent implements IOdinAgent {
 	}
 	
 	@Override
-	public int scanClient(MACAddress clientHwAddr, int channel, int time){
+	public int scanClient(MacAddress clientHwAddr, int channel, int time){
 		return lastScan;
 	}
 }

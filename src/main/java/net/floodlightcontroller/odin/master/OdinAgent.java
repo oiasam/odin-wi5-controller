@@ -13,20 +13,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.openflow.protocol.OFFlowMod;
-import org.openflow.protocol.OFMatch;
-import org.openflow.protocol.OFPort;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.action.OFActionOutput;
-import org.openflow.util.U16;
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.projectfloodlight.openflow.protocol.*;
+import org.projectfloodlight.openflow.protocol.action.OFAction;
+import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActions;
+import org.projectfloodlight.openflow.protocol.match.Match;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
 
 import java.util.Collections;
-import java.lang.*;
+//import java.lang.*;
 
 import net.floodlightcontroller.core.IOFSwitch;
-import net.floodlightcontroller.util.MACAddress;
 
+//import org.projectfloodlight.openflow.protocol.OFFlowMod;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
+import org.projectfloodlight.openflow.types.OFPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,8 +149,8 @@ class OdinAgent implements IOdinAgent {
 				for (int i = 3; i < properties.length; i++) {
 					ssidList.add (properties[i]);
 				}
-				lvap =  new Lvap (MACAddress.valueOf(properties[2]), ssidList);
-				oc = new OdinClient(MACAddress.valueOf(properties[0]),
+				lvap =  new Lvap (MacAddress.of(properties[2]), ssidList);
+				oc = new OdinClient(MacAddress.of(properties[0]),
 						InetAddress.getByName(properties[1]), lvap);
 				lvap.setAgent(this);
 				clients.add(oc);
@@ -179,10 +183,10 @@ class OdinAgent implements IOdinAgent {
 	 * @return A map of stations' MAC addresses to a map of properties and
 	 *         values.
 	 */
-	public Map<MACAddress, Map<String, String>> getTxStats() {
+	public Map<MacAddress, Map<String, String>> getTxStats() {
 		String stats = invokeReadHandler(READ_HANDLER_TXSTATS);
 
-		Map<MACAddress, Map<String, String>> ret = new HashMap<MACAddress, Map<String, String>>();
+		Map<MacAddress, Map<String, String>> ret = new HashMap<MacAddress, Map<String, String>>();
 
 		/*
 		 * We basically get rows like this MAC_ADDR1 prop1:<value> prop2:<value>
@@ -196,7 +200,7 @@ class OdinAgent implements IOdinAgent {
 				continue;
 			}
 
-			MACAddress eth = MACAddress.valueOf(row[0].toLowerCase());
+			MacAddress eth = MacAddress.of(row[0].toLowerCase());
 
 			Map<String, String> innerMap = new HashMap<String, String>();
 
@@ -216,10 +220,10 @@ class OdinAgent implements IOdinAgent {
 	 * @return A map of stations' MAC addresses to a map of properties and
 	 *         values.
 	 */
-	public Map<MACAddress, Map<String, String>> getRxStats() {
+	public Map<MacAddress, Map<String, String>> getRxStats() {
 		String stats = invokeReadHandler(READ_HANDLER_RXSTATS);
 
-		Map<MACAddress, Map<String, String>> ret = new HashMap<MACAddress, Map<String, String>>();
+		Map<MacAddress, Map<String, String>> ret = new HashMap<MacAddress, Map<String, String>>();
 
 		/*
 		 * We basically get rows like this MAC_ADDR1 prop1:<value> prop2:<value>
@@ -233,7 +237,7 @@ class OdinAgent implements IOdinAgent {
 				continue;
 			}
 
-			MACAddress eth = MACAddress.valueOf(row[0].toLowerCase());
+			MacAddress eth = MacAddress.of(row[0].toLowerCase());
 
 			Map<String, String> innerMap = new HashMap<String, String>();
 
@@ -259,8 +263,49 @@ class OdinAgent implements IOdinAgent {
 	 * @return 0 on success, -1 otherwise
 	 */
 	public int init(InetAddress host) {
-
-		OFFlowMod flow1 = new OFFlowMod();
+		// Default to 1.4 - This is overwritten by the features reply
+		OFFactory factory = OFFactories.getFactory(OFVersion.OF_13);
+		OFActions actions = factory.actions();
+		
+		OFFlowAdd flow1;
+		{
+			Match myMatch = factory.buildMatch()
+					.setExact(MatchField.IN_PORT,OFPort.of(1))
+					.build();
+			
+			ArrayList<OFAction> actionList = new ArrayList<OFAction>();
+			OFActionOutput output = actions.buildOutput()
+					.setPort(OFPort.of(2))
+					.build();
+			actionList.add(output);
+			
+			flow1 = factory.buildFlowAdd()
+					.setPriority(32768)
+					.setMatch(myMatch)
+					.setActions(actionList)
+					.build();
+		}
+		
+		OFFlowAdd flow2;
+		{
+			Match myMatch = factory.buildMatch()
+					.setExact(MatchField.IN_PORT,OFPort.of(2))
+					.build();
+			
+			ArrayList<OFAction> actionList = new ArrayList<OFAction>();
+			OFActionOutput output = actions.buildOutput()
+					.setPort(OFPort.of(1))
+					.build();
+			actionList.add(output);
+			
+			flow2 = factory.buildFlowAdd()
+					.setPriority(32768)
+					.setMatch(myMatch)
+					.setActions(actionList)
+					.build();
+		}
+		
+		/*OFFlowMod flow1 = new OFFlowMod();
 		{
 			OFMatch match = new OFMatch();
 			//match.fromString("in_port=1,dl_type=0x0800");
@@ -323,7 +368,7 @@ class OdinAgent implements IOdinAgent {
 			flow3.setIdleTimeout((short) 0);
 			flow3.setActions(actionList);
 			flow3.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
-		}
+		} */
 
 		//TODO: flow rule for local port (TNO-Unizar)
 		/*OFFlowMod flow4 = new OFFlowMod();
@@ -347,13 +392,15 @@ class OdinAgent implements IOdinAgent {
 			flow4.setIdleTimeout((short) 0);
 			flow4.setActions(actionList);
 			flow4.setLength(U16.t(OFFlowMod.MINIMUM_LENGTH + OFActionOutput.MINIMUM_LENGTH));
-		}
+		}*/
 
-		try {
-			//ofSwitch.write(flow1, null);
+		ofSwitch.write(flow1);
+		ofSwitch.write(flow2);
+		/*try {
+			
 			//ofSwitch.write(flow2, null);
 			//ofSwitch.write(flow3, null);
-			ofSwitch.write(flow4, null);
+			//ofSwitch.write(flow4, null);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -514,7 +561,7 @@ class OdinAgent implements IOdinAgent {
 
 
 	@Override
-	public void sendProbeResponse(MACAddress clientHwAddr, MACAddress bssid, Set<String> ssidList) {
+	public void sendProbeResponse(MacAddress clientHwAddr, MacAddress bssid, Set<String> ssidList) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");
@@ -548,7 +595,7 @@ class OdinAgent implements IOdinAgent {
 	}
 	
 	@Override
-	public void sendChannelSwitch(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList, int channel) {
+	public void sendChannelSwitch(MacAddress clientHwAddr, MacAddress bssid, List<String> ssidList, int channel) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");
@@ -588,7 +635,7 @@ class OdinAgent implements IOdinAgent {
 
 
 	@Override
-	public int scanClient(MACAddress clientHwAddr, int channel, int time) {
+	public int scanClient(MacAddress clientHwAddr, int channel, int time) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");

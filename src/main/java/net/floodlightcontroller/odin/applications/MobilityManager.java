@@ -1,7 +1,7 @@
 package net.floodlightcontroller.odin.applications;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+//import java.net.UnknownHostException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -14,14 +14,15 @@ import net.floodlightcontroller.odin.master.NotificationCallback;
 import net.floodlightcontroller.odin.master.NotificationCallbackContext;
 import net.floodlightcontroller.odin.master.OdinClient;
 import net.floodlightcontroller.odin.master.OdinEventSubscription;
-import net.floodlightcontroller.odin.master.OdinMaster;
+//import net.floodlightcontroller.odin.master.OdinMaster;
 import net.floodlightcontroller.odin.master.OdinEventSubscription.Relation;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 public class MobilityManager extends OdinApplication {
 	protected static Logger log = LoggerFactory.getLogger(MobilityManager.class);
 	/* A table including each client and its mobility statistics */
-	private ConcurrentMap<MACAddress, MobilityStats> clientMap = new ConcurrentHashMap<MACAddress, MobilityStats> ();
+	private ConcurrentMap<MacAddress, MobilityStats> clientMap = new ConcurrentHashMap<MacAddress, MobilityStats> ();
 	private final long HYSTERESIS_THRESHOLD; 		// milliseconds
 	private final long IDLE_CLIENT_THRESHOLD; 		// Must to be bigger than HYSTERESIS_THRESHOLD (milliseconds)
 	private final long SIGNAL_STRENGTH_THRESHOLD; 	// Signal strength threshold

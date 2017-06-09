@@ -3,13 +3,15 @@ package net.floodlightcontroller.odin.master;
 
 import java.net.InetAddress;
 
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+//import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using=OdinClientSerializer.class)
-public class OdinClient implements Comparable {
-	private final MACAddress hwAddress;
+public class OdinClient implements Comparable<OdinClient> {
+	private final MacAddress hwAddress;
 	private InetAddress ipAddress;
 	private Lvap lvap;
 
@@ -18,7 +20,7 @@ public class OdinClient implements Comparable {
 	// So make sure to pass OdinClient through interfaces of other classes
 	// as opposed to the 4-LVAP properties now.
 
-	public OdinClient (MACAddress hwAddress, InetAddress ipAddress, Lvap lvap) {
+	public OdinClient (MacAddress hwAddress, InetAddress ipAddress, Lvap lvap) {
 		this.hwAddress = hwAddress;
 		this.ipAddress = ipAddress;
 		this.lvap = lvap;
@@ -31,7 +33,7 @@ public class OdinClient implements Comparable {
 	 *
 	 * @return client's MAC address
 	 */
-	public MACAddress getMacAddress() {
+	public MacAddress getMacAddress() {
 		return this.hwAddress;
 	}
 
@@ -66,7 +68,7 @@ public class OdinClient implements Comparable {
 	/**
 	 * Set the client's lvap
 	 */
-	public void setLvap() {
+	public void setLvap(Lvap lvap) {
 		this.lvap = lvap;
 	}
 
@@ -86,15 +88,16 @@ public class OdinClient implements Comparable {
 
 
 	@Override
-	public int compareTo(Object o) {
-		assert (o instanceof OdinClient);
+	public int compareTo(OdinClient that) {
+		//assert (o instanceof OdinClient);
 
-		if (this.hwAddress.toLong() == ((OdinClient)o).hwAddress.toLong())
+		/*if (this.hwAddress.toLong() == ((OdinClient)o).hwAddress.toLong())
 			return 0;
 
 		if (this.hwAddress.toLong() > ((OdinClient)o).hwAddress.toLong())
 			return 1;
 
-		return -1;
+		return -1;*/
+		return this.hwAddress.compareTo( that.hwAddress );
 	}
 }

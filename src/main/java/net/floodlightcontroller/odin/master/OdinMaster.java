@@ -6,12 +6,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+//import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,10 +23,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.sound.midi.MidiDevice.Info;
+//import javax.sound.midi.MidiDevice.Info;
 
-import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.MacAddress;
+//import org.openflow.protocol.OFMessage;
+//import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +40,8 @@ import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.IOFSwitchListener;
+import net.floodlightcontroller.core.PortChangeType;
+import net.floodlightcontroller.core.internal.IOFSwitchService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -43,7 +51,7 @@ import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPacket;
 import net.floodlightcontroller.restserver.IRestApiService;
 import net.floodlightcontroller.threadpool.IThreadPoolService;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
 
 
 /**
@@ -58,6 +66,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	protected IRestApiService restApi;
 
 	private IFloodlightProviderService floodlightProvider;
+	private IOFSwitchService switchService;
 	private ScheduledExecutorService executor;
 
 	private final AgentManager agentManager;
@@ -121,14 +130,15 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 					OdinClient trackedClient = clientManager.getClients().get(client.getMacAddress());
 					Lvap lvap = trackedClient.getLvap();
 					assert (lvap != null);
-					lvap.setOFMessageList(lvapManager.getDefaultOFModList(client.getIpAddress()));
+					lvap.setOFMessageList(lvapManager.getDefaultOFModList(lvap, client.getIpAddress()));
 
 					// Push flow messages associated with the client
-        			try {
+        			//try {
+						log.info("Write messages: " + lvap.getOFMessageList());
         				lvap.getAgent().getSwitch().write(lvap.getOFMessageList(), null);
-        			} catch (IOException e) {
-        				log.error("Failed to update switch's flow tables " + lvap.getAgent().getSwitch());
-        			}
+        			//} catch (IOException e) {
+        			//	log.error("Failed to update switch's flow tables " + lvap.getAgent().getSwitch());
+        			//}
 				}
 			}
 		}
@@ -137,7 +147,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		}
 	}
 
-	synchronized void receiveDeauth (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+	synchronized void receiveDeauth (final InetAddress odinAgentAddr, final MacAddress clientHwAddress) {
 
 		if (clientHwAddress == null || odinAgentAddr == null)
 			return;
@@ -157,7 +167,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	}
 
 	/* This method stops the timer that clears the lvap if an IP is not received for the client */
-	synchronized void receiveAssoc (final InetAddress odinAgentAddr, final MACAddress clientHwAddress) {
+	synchronized void receiveAssoc (final InetAddress odinAgentAddr, final MacAddress clientHwAddress) {
 
 		if (clientHwAddress == null || odinAgentAddr == null)
 			return;
@@ -185,7 +195,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param odinAgentAddr InetAddress of agent
 	 * @param clientHwAddress MAC address of client that performed probe scan
 	 */
-	synchronized void receiveProbe (final InetAddress odinAgentAddr, final MACAddress clientHwAddress, String ssid) {
+	synchronized void receiveProbe (final InetAddress odinAgentAddr, final MacAddress clientHwAddress, String ssid) {
 
 		if (odinAgentAddr == null
 	    	|| clientHwAddress == null
@@ -205,7 +215,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		if (ssid.equals("")) {   // FIXMeE:  Are you sure this is right, the client can delete the network.
 			// we just send probe responses
 			IOdinAgent agent = agentManager.getAgent(odinAgentAddr);
-			MACAddress bssid = poolManager.generateBssidForClient(clientHwAddress);
+			MacAddress bssid = poolManager.generateBssidForClient(clientHwAddress);
 
 			// FIXME: Sub-optimal. We'll end up generating redundant probe requests
 			Set<String> ssidSet = new TreeSet<String> ();
@@ -273,7 +283,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param odinAgentAddr agent at which the event was triggered
 	 * @param subscriptionIds list of subscription Ids that the event matches
 	 */
-	synchronized void receivePublish (final MACAddress clientHwAddress, final InetAddress odinAgentAddr, final Map<Long, Long> subscriptionIds) {
+	synchronized void receivePublish (MacAddress clientHwAddress, final InetAddress odinAgentAddr, final Map<Long, Long> subscriptionIds) {
 
 		// The check for null clientHwAddress might go away
 		// in the future if we end up having events
@@ -313,7 +323,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param newApIpAddr IPv4 address of new access point
 	 * @param hwAddrSta Ethernet address of STA to be handed off
 	 */
-	private void handoffClientToApInternal (String pool, final MACAddress clientHwAddr, final InetAddress newApIpAddr){
+	private void handoffClientToApInternal (String pool, final MacAddress clientHwAddr, final InetAddress newApIpAddr){
 
 		// As an optimisation, we probably need to get the accessing done first,
 		// prime both nodes, and complete a handoff.
@@ -352,11 +362,11 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 				log.info ("Client: " + clientHwAddr + " connecting for first time. Assigning to: " + newAgent.getIpAddress());
 
 				// Push flow messages associated with the client
-				try {
+				//try {
 					newAgent.getSwitch().write(lvap.getOFMessageList(), null);
-				} catch (IOException e) {
-					log.error("Failed to update switch's flow tables " + newAgent.getSwitch());
-				}
+				//} catch (IOException e) {
+				//	log.error("Failed to update switch's flow tables " + newAgent.getSwitch());
+				//}
 
 				newAgent.addClientLvap(client);
 				lvap.setAgent(newAgent);
@@ -400,16 +410,16 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			if ((agentManager.getAgent(currentApIpAddress)).getChannel() != (agentManager.getAgent(newApIpAddr)).getChannel()) {
 				//Send CSA messages and wait.
 				sendChannelSwitchToClient(clientPool,currentApIpAddress, clientHwAddr, client.getLvap().getSsids(),(agentManager.getAgent(newApIpAddr)).getChannel());
-				//void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MACAddress clientHwAddr, List<String> lvapSsids, int channel);
+				//void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MacAddress clientHwAddr, List<String> lvapSsids, int channel);
 				
 			}
 			
 			// Push flow messages associated with the client
-			try {
+			//try {
 				newAgent.getSwitch().write(lvap.getOFMessageList(), null);
-			} catch (IOException e) {
-				log.error("Failed to update switch's flow tables " + newAgent.getSwitch());
-			}
+			//} catch (IOException e) {
+				//log.error("Failed to update switch's flow tables " + newAgent.getSwitch());
+			//}
 
 			/* Client is with another AP. We remove the VAP from
 			 * the current AP of the client, and spawn it on the new one.
@@ -433,7 +443,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param hwAddrSta Ethernet address of STA to be handed off
 	 */
 	@Override
-	public void handoffClientToAp (String pool, final MACAddress clientHwAddr, final InetAddress newApIpAddr){
+	public void handoffClientToAp (String pool, final MacAddress clientHwAddr, final InetAddress newApIpAddr){
 		handoffClientToApInternal(pool, clientHwAddr, newApIpAddr);
 	}
 
@@ -450,14 +460,14 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 
 	/**
-	 * Get the OdinClient type from the client's MACAddress
+	 * Get the OdinClient type from the client's MacAddress
 	 *
 	 * @param pool that the invoking application corresponds to
-	 * @param clientHwAddress MACAddress of the client
+	 * @param clientHwAddress MacAddress of the client
 	 * @return a OdinClient instance corresponding to clientHwAddress
 	 */
 	@Override
-	public OdinClient getClientFromHwAddress (String pool, MACAddress clientHwAddress) {
+	public OdinClient getClientFromHwAddress (String pool, MacAddress clientHwAddress) {
 		OdinClient client = clientManager.getClient(clientHwAddress);
 		return (client != null && poolManager.getPoolForClient(client).equals(pool)) ? client : null;
 	}
@@ -486,7 +496,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @return Key-Value entries of each recorded statistic for each client
 	 */
 	@Override
-	public Map<MACAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr) {
+	public Map<MacAddress, Map<String, String>> getTxStatsFromAgent (String pool, InetAddress agentAddr) {
 		return agentManager.getAgent(agentAddr).getTxStats();
 	}
 
@@ -500,7 +510,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @return Key-Value entries of each recorded statistic for each client
 	 */
 	@Override
-	public Map<MACAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr) {
+	public Map<MacAddress, Map<String, String>> getRxStatsFromAgent (String pool, InetAddress agentAddr) {
 		return agentManager.getAgent(agentAddr).getRxStats();
 	}
 
@@ -549,7 +559,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			final String addr = entry.getValue().oes.getClient();
 			subscriptionList = subscriptionList +
 								entry.getKey() + " " +
-								(addr.equals("*") ? MACAddress.valueOf("00:00:00:00:00:00") : addr)  + " " +
+								(addr.equals("*") ? MacAddress.of("00:00:00:00:00:00") : addr)  + " " +
 								entry.getValue().oes.getStatistic() + " " +
 								entry.getValue().oes.getRelation().ordinal() + " " +
 								entry.getValue().oes.getValue() + " ";
@@ -586,7 +596,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			final String addr = entry.getValue().oes.getClient();
 			subscriptionList = subscriptionList +
 								entry.getKey() + " " +
-								(addr.equals("*") ? MACAddress.valueOf("00:00:00:00:00:00") : addr)  + " " +
+								(addr.equals("*") ? MacAddress.of("00:00:00:00:00:00") : addr)  + " " +
 								entry.getValue().oes.getStatistic() + " " +
 								entry.getValue().oes.getRelation().ordinal() + " " +
 								entry.getValue().oes.getValue() + " ";
@@ -699,8 +709,8 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @param Channel 
 	 */
 	//@Override
-	private void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MACAddress clientHwAddr, List<String> lvapSsids, int channel) {		
-		MACAddress bssid = poolManager.generateBssidForClient(clientHwAddr);
+	private void sendChannelSwitchToClient (String pool, InetAddress agentAddr, MacAddress clientHwAddr, List<String> lvapSsids, int channel) {		
+		MacAddress bssid = poolManager.generateBssidForClient(clientHwAddr);
 		agentManager.getAgent(agentAddr).sendChannelSwitch(clientHwAddr, bssid, lvapSsids, channel);
 	}
 	
@@ -715,7 +725,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	 * @return Signal power
 	 */
 	@Override
-	public int scanClientFromAgent (String pool, InetAddress agentAddr, MACAddress clientHwAddr, int channel, int time){
+	public int scanClientFromAgent (String pool, InetAddress agentAddr, MacAddress clientHwAddr, int channel, int time){
 		return agentManager.getAgent(agentAddr).scanClient(clientHwAddr, channel, time);
 	}
 
@@ -749,6 +759,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	public void init(FloodlightModuleContext context)
 			throws FloodlightModuleException {
 		floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+		switchService = context.getServiceImpl(IOFSwitchService.class);
 		restApi = context.getServiceImpl(IRestApiService.class);
 		IThreadPoolService tp = context.getServiceImpl(IThreadPoolService.class);
 		executor = tp.getScheduledExecutor();
@@ -756,11 +767,12 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 	@Override
 	public void startUp(FloodlightModuleContext context) {
-		floodlightProvider.addOFSwitchListener(this);
+		switchService.addOFSwitchListener(this);
 		floodlightProvider.addOFMessageListener(OFType.PACKET_IN, this);
 		restApi.addRestletRoutable(new OdinMasterWebRoutable());
 
 		agentManager.setFloodlightProvider (floodlightProvider);
+		agentManager.setSwitchService(switchService);
 
 		// read config options
         Map<String, String> configOptions = context.getConfigParams(this);
@@ -909,16 +921,16 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			while ((strLine = br.readLine()) != null) {
 				String [] fields = strLine.split(" ");
 
-				MACAddress hwAddress = MACAddress.valueOf(fields[0]);
+				MacAddress hwAddress = MacAddress.of(fields[0]);
 				InetAddress ipaddr = InetAddress.getByName(fields[1]);
 
 				ArrayList<String> ssidList = new ArrayList<String> ();
 				ssidList.add(fields[3]); // FIXME: assumes a single ssid
-				Lvap lvap = new Lvap(MACAddress.valueOf(fields[2]), ssidList);
+				Lvap lvap = new Lvap(MacAddress.of(fields[2]), ssidList);
 
 				log.info("Adding client: " + fields[0] + " " + fields[1] + " " +fields[2] + " " +fields[3]);
 				clientManager.addClient(hwAddress, ipaddr, lvap);
-				lvap.setOFMessageList(lvapManager.getDefaultOFModList(ipaddr));
+				lvap.setOFMessageList(lvapManager.getDefaultOFModList(lvap, ipaddr));
 			}
 
       br.close();
@@ -959,23 +971,53 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	/** IOFSwitchListener methods **/
 
 	@Override
-	public void addedSwitch(IOFSwitch sw) {
-		// inform-agent manager
-	}
-
-	@Override
 	public String getName() {
 		return "OdinMaster";
 	}
 
 	@Override
-	public void removedSwitch(IOFSwitch sw) {
-		// Not all OF switches are Odin agents. We should immediately remove
-		// any associated Odin agent then.
-		final InetAddress switchIpAddr = ((InetSocketAddress) sw.getChannel().getRemoteAddress()).getAddress();
-		agentManager.removeAgent(switchIpAddr);
+	public void switchAdded(DatapathId switchId) {
+		// TODO Auto-generated method stub
+		
 	}
 
+	@Override
+	public void switchRemoved(DatapathId switchId) {
+		// Not all OF switches are Odin agents. We should immediately remove
+		// any associated Odin agent then.
+		//final InetAddress switchIpAddr = ((InetSocketAddress) sw.getChannel().getRemoteAddress()).getAddress();
+		SocketAddress tSwitchIpAddr = switchService.getSwitch(switchId).getInetAddress();
+		
+		assert tSwitchIpAddr instanceof InetSocketAddress;
+		InetAddress switchIpAddr = ((InetSocketAddress) tSwitchIpAddr).getAddress();
+		agentManager.removeAgent(switchIpAddr);
+		
+	}
+
+	@Override
+	public void switchActivated(DatapathId switchId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void switchPortChanged(DatapathId switchId, OFPortDesc port, PortChangeType type) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void switchChanged(DatapathId switchId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void switchDeactivated(DatapathId switchId) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 /*
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
@@ -1007,7 +1049,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
         	try {
 
 			log.info("DHCP packet received...");
-        		final MACAddress clientHwAddr = MACAddress.valueOf(packet.getClientHardwareAddress());
+        		final MacAddress clientHwAddr = packet.getClientHardwareAddress();
         		final OdinClient oc = clientManager.getClients().get(clientHwAddr);
 
     			// Don't bother if we're not tracking the client
@@ -1020,10 +1062,10 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 			log.info("*** DHCP packet *for our client* received... *** ");
 
         		// Look for the Your-IP field in the DHCP packet
-        		if (packet.getYourIPAddress() != 0) {
+        		if (packet.getYourIPAddress() != null) {
 
         			// int -> byte array -> InetAddr
-        			final byte[] arr = ByteBuffer.allocate(4).putInt(packet.getYourIPAddress()).array();
+        			final byte[] arr = ByteBuffer.allocate(4).putInt(packet.getYourIPAddress().getInt()).array();
         			final InetAddress yourIp = InetAddress.getByAddress(arr);
 
         			// No need to invoke agent update protocol if the node
@@ -1115,11 +1157,11 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 	private class OdinAgentSendProbeResponseRunnable implements Runnable {
 		final IOdinAgent oa;
-		final MACAddress clientHwAddr;
-		final MACAddress bssid;
+		final MacAddress clientHwAddr;
+		final MacAddress bssid;
 		final Set<String> ssidList;
 
-		OdinAgentSendProbeResponseRunnable(IOdinAgent oa, MACAddress clientHwAddr, MACAddress bssid, Set<String> ssidList) {
+		OdinAgentSendProbeResponseRunnable(IOdinAgent oa, MacAddress clientHwAddr, MacAddress bssid, Set<String> ssidList) {
 			this.oa = oa;
 			this.clientHwAddr = clientHwAddr;
 			this.bssid = bssid;
@@ -1190,4 +1232,5 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		OdinEventSubscription oes;
 		NotificationCallback cb;
 	}
+
 }

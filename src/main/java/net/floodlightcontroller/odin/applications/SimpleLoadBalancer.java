@@ -9,7 +9,8 @@ import java.util.Set;
 
 import net.floodlightcontroller.odin.master.OdinApplication;
 import net.floodlightcontroller.odin.master.OdinClient;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 public class SimpleLoadBalancer extends OdinApplication {
 
@@ -32,7 +33,7 @@ public class SimpleLoadBalancer extends OdinApplication {
 	* 00:00:00:00:00:02		192.168.0.1
 	* 00:00:00:00:00:03		192.168.0.3 
 	*/
-	Map<MACAddress, Set<InetAddress>> hearingMap = new HashMap<MACAddress, Set<InetAddress>> ();
+	Map<MacAddress, Set<InetAddress>> hearingMap = new HashMap<MacAddress, Set<InetAddress>> ();
 
 	/* This table will be used for storing the status of the new balance 
 	* as you fill the table, you distribute and balance the clients between agents
@@ -74,12 +75,12 @@ public class SimpleLoadBalancer extends OdinApplication {
 				for (InetAddress agentAddr: getAgents()) {
 					/* FIXME: if the next line is run before the APs are activated,
 					*the program blocks here */
-					Map<MACAddress, Map<String, String>> vals = getRxStatsFromAgent(agentAddr);
+					Map<MacAddress, Map<String, String>> vals = getRxStatsFromAgent(agentAddr);
 					
 					/* for each STA which has contacted that agent (AP) (not necessarily associated) */
-					for (Entry<MACAddress, Map<String, String>> vals_entry: vals.entrySet()) {
+					for (Entry<MacAddress, Map<String, String>> vals_entry: vals.entrySet()) {
 						
-						MACAddress staHwAddr = vals_entry.getKey();
+						MacAddress staHwAddr = vals_entry.getKey();
 						
 						/* for all the clients registered in Odin (those who have an LVAP) */
 						for (OdinClient oc: clients) {

@@ -10,7 +10,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 /**
  * This class does all the book keeping for Odin's pool-based
@@ -152,13 +153,13 @@ class PoolManager {
 	 * @param clientHwAddress
 	 * @return BSSID for the client
 	 */
-	MACAddress generateBssidForClient(MACAddress clientHwAddress) {
+	MacAddress generateBssidForClient(MacAddress clientHwAddress) {
 		// XXX: This could be done more intelligently someday
-		byte[] bssidBytes = clientHwAddress.toBytes();
+		byte[] bssidBytes = clientHwAddress.getBytes();
 		bssidBytes[0] = oui[0];
 		bssidBytes[1] = oui[1];
 		bssidBytes[2] = oui[2];
-		final MACAddress bssid = MACAddress.valueOf(bssidBytes);
+		final MacAddress bssid = MacAddress.of(bssidBytes);
 		
 		return bssid;
 	}

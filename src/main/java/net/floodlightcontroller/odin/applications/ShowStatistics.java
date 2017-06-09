@@ -1,15 +1,16 @@
 package net.floodlightcontroller.odin.applications;
 
 import java.net.InetAddress;
-import java.util.HashMap;
+//import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+//import java.util.Set;
 
 import net.floodlightcontroller.odin.master.OdinApplication;
 import net.floodlightcontroller.odin.master.OdinClient;
-import net.floodlightcontroller.util.MACAddress;
+//import net.floodlightcontroller.util.MACAddress;
+import org.projectfloodlight.openflow.types.MacAddress;
 
 public class ShowStatistics extends OdinApplication {
 
@@ -54,10 +55,10 @@ HashSet<OdinClient> clients;
 		// Transmission statistics
 		System.out.println("[ShowStatistics] Last ping heard from agent " + agentAddr + " " + getLastHeardFromAgent(agentAddr));
 
-	    Map<MACAddress, Map<String, String>> vals_tx = getTxStatsFromAgent(agentAddr);  // all the clients who have statistics
+	    Map<MacAddress, Map<String, String>> vals_tx = getTxStatsFromAgent(agentAddr);  // all the clients who have statistics
     
 		// Reception statistics
-	    Map<MACAddress, Map<String, String>> vals_rx = getRxStatsFromAgent(agentAddr);
+	    Map<MacAddress, Map<String, String>> vals_rx = getRxStatsFromAgent(agentAddr);
 
 	    for (OdinClient oc: clients) {  // all the clients currently associated
 	    // NOTE: the clients currently associated MAY NOT be the same as the clients who have statistics
@@ -65,9 +66,9 @@ HashSet<OdinClient> clients;
 	    System.out.println("\n[ShowStatistics] 1" + agentAddr);
 	    
          // for each STA associated to the Agent
-	     for (Entry<MACAddress, Map<String, String>> vals_entry_rx: vals_rx.entrySet()) {
+	     for (Entry<MacAddress, Map<String, String>> vals_entry_rx: vals_rx.entrySet()) {
 
-	      MACAddress staHwAddr = vals_entry_rx.getKey();
+	      MacAddress staHwAddr = vals_entry_rx.getKey();
 			 if (oc.getMacAddress().equals(staHwAddr) && oc.getIpAddress() != null && !oc.getIpAddress().getHostAddress().equals("0.0.0.0")) {
 			     System.out.println("\tUplink station MAC: " + staHwAddr + " IP: " + oc.getIpAddress().getHostAddress());
 			    System.out.println("\t\tnum packets: " + vals_entry_rx.getValue().get("packets"));
@@ -81,8 +82,8 @@ HashSet<OdinClient> clients;
 			}
 		  }
 		 // for each STA associated to the Agent
-	     for (Entry<MACAddress, Map<String, String>> vals_entry_tx: vals_tx.entrySet()) {
-	       MACAddress staHwAddr = vals_entry_tx.getKey();
+	     for (Entry<MacAddress, Map<String, String>> vals_entry_tx: vals_tx.entrySet()) {
+	       MacAddress staHwAddr = vals_entry_tx.getKey();
             if (oc.getMacAddress().equals(staHwAddr) && oc.getIpAddress() != null && !oc.getIpAddress().getHostAddress().equals("0.0.0.0")) {
 	          System.out.println("\tDownlink station MAC: " + staHwAddr + " IP: " + oc.getIpAddress().getHostAddress());
 	          System.out.println("\t\tnum packets: " + vals_entry_tx.getValue().get("packets"));
