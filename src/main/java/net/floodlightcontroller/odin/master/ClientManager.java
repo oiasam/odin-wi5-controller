@@ -9,6 +9,9 @@ import net.floodlightcontroller.util.MACAddress;
 
 class ClientManager {
 	private final Map<MACAddress, OdinClient> odinClientMap = new ConcurrentHashMap<MACAddress, OdinClient> ();
+	
+	/**We add a black list for the clients that should remain in 4G*/
+	private final Map<MACAddress, OdinClient> odinBlackList = new ConcurrentHashMap<MACAddress, OdinClient> ();
 
 	
 	/**
@@ -61,5 +64,57 @@ class ClientManager {
 	 */
 	protected Map<MACAddress, OdinClient> getClients () {
 		return odinClientMap;
+	}
+	
+	/**
+	 * Add a client to the black list
+	 * 
+	 * @param hwAddress Client's hw address
+	 * @param ipv4Address Client's IPv4 address
+	 * @param vapBssid Client specific VAP bssid
+	 * @param vapEssid Client specific VAP essid
+	 */
+	protected void addClientBL (final MACAddress clientHwAddress, final InetAddress ipv4Address, final Lvap lvap) {
+		odinBlackList.put(clientHwAddress, new OdinClient (clientHwAddress, ipv4Address, lvap));
+	}
+	
+	
+	/**
+	 * Add a client to the black list
+	 * 
+	 * @param hwAddress Client's hw address
+	 * @param ipv4Address Client's IPv4 address
+	 * @param vapBssid Client specific VAP bssid
+	 * @param vapEssid Client specific VAP essid
+	 */
+	protected void addClientBL (final OdinClient oc) {
+		odinBlackList.put(oc.getMacAddress(), oc);
+	}
+	
+	
+	/**
+	 * Removes a client from the black list
+	 * 
+	 * @param hwAddress Client's hw address
+	 */
+	protected void removeClientBL (final MACAddress clientHwAddress) {
+		odinBlackList.remove(clientHwAddress);
+	}
+	
+	
+	/**
+	 * Get a client by hw address from the black list
+	 */
+	protected OdinClient getClientBL (final MACAddress clientHwAddress) {
+		return odinBlackList.get(clientHwAddress);
+	}
+	
+	
+	/**
+	 * Get the client Map  from the black list
+	 * @return client map
+	 */
+	protected Map<MACAddress, OdinClient> getClientsBL () {
+		return odinBlackList;
 	}
 }
