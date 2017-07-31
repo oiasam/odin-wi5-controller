@@ -203,4 +203,17 @@ public interface IOdinAgent {
 	 */
 	public int scanClient (MACAddress clientHwAddr, int channel, int time);
 	
+	/**
+	 * Send Deauth frame to a client to disconnect from the specific agent (AP).
+	 * 
+	 * @param Client MAC
+	 * @param BSSID
+	 * @param SSID list
+	 * @author Jose Almodovar <jose.almodovarchico@tno.nl>
+	 * 
+	 */
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList);
+	
+	
+	
 }
