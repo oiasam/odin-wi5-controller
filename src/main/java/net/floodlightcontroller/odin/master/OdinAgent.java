@@ -609,14 +609,15 @@ class OdinAgent implements IOdinAgent {
 	} 
 	
 	@Override
-	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList) {
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(clientHwAddr);
 		sb.append(" ");
-		for (String ssid: ssidList) {
+		sb.append(bssid);
+		/*for (String ssid: ssidList) {
 			sb.append(" ");
 			sb.append(ssid);
-		}
+		}*/
 		invokeWriteHandler(WRITE_HANDLER_SEND_DEAUTH, sb.toString());
 	}
 	

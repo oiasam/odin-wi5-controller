@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class VerticalHandover extends OdinApplication {
 	
-	protected static Logger log = LoggerFactory.getLogger(HandoverMultichannel.class);
+	protected static Logger log = LoggerFactory.getLogger(VerticalHandover.class);
 
 	HashSet<OdinClient> clients;
 	
@@ -25,25 +25,30 @@ public class VerticalHandover extends OdinApplication {
 	public void run() {
 		OdinClient currentClient;
 		Lvap currentLvap;
+		IOdinAgent currentAgent;
 				
 		/* When the application runs, you need some time to start the agents */
-		log.info("HandoverMultichannel: wait" + INTERVAL + " ms to initialize.");
+		log.info("Wait " + INTERVAL + " ms to initialize.");
 		try {
 			Thread.sleep(INTERVAL);
 		} catch (InterruptedException e){
         		e.printStackTrace();
 		}
-		
+		log.info("Remove all clients.");
 		/*all the clients Odin has heared (even non-connected) */				
 		clients = new HashSet<OdinClient>(getClients());
 		
-		Iterator it = clients.iterator();
+		Iterator<OdinClient> it = clients.iterator();
 	
 		while(it.hasNext()){
 			currentClient = (OdinClient) it.next();
 			currentLvap = currentClient.getLvap();
+			currentAgent = currentLvap.getAgent();
 			
-			currentLvap.getAgent().sendDeauth(currentClient.getMacAddress(), currentLvap.getBssid(), currentLvap.getSsids());
+			log.debug("Removing client " + currentClient.getMacAddress().toString() + " and LVAP " + currentLvap.getBssid().toString() + " from AP " + currentAgent.getIpAddress().toString());
+			
+			currentAgent.sendDeauth(currentClient.getMacAddress(), currentLvap.getBssid());
+			currentAgent.removeClientLvap(currentClient);
 			
 		}
 		

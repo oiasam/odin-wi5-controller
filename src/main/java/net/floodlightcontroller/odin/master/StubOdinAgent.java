@@ -135,7 +135,7 @@ class StubOdinAgent implements IOdinAgent {
 	}
 	
 	@Override
-	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList) {
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid) {
 		// Do nothing.
 	}
 }

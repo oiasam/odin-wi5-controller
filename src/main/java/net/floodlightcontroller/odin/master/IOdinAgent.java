@@ -212,7 +212,7 @@ public interface IOdinAgent {
 	 * @author Jose Almodovar <jose.almodovarchico@tno.nl>
 	 * 
 	 */
-	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid, List<String> ssidList);
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid);
 	
 	
 	

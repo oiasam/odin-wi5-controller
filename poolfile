@@ -1,8 +1,10 @@
 # Pool-1
 NAME pool-1
-NODES 192.168.1.9 192.168.1.10
+NODES 192.168.2.214 192.168.2.215
 NETWORKS wi5-demo
-APPLICATIONS net.floodlightcontroller.odin.applications.ShowStatistics
+APPLICATIONS net.floodlightcontroller.odin.applications.VerticalHandover
+#APPLICATIONS net.floodlightcontroller.odin.applications.HandoverMultichannel
+#APPLICATIONS net.floodlightcontroller.odin.applications.ShowStatistics net.floodlightcontroller.odin.applications.MobilityManager
 
 # Pool-2
 #NAME pool-2
