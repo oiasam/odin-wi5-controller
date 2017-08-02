@@ -37,6 +37,7 @@ public class HandoverMultichannel extends OdinApplication {
 	 * Register subscriptions
 	 */
 	private void init () {
+		log.info("Initializing");
 		OdinEventSubscription oes = new OdinEventSubscription();
 		/* FIXME: Add something in order to subscribe more than one STA */
 		//oes.setSubscription("40:A5:EF:E5:93:DF", "signal", Relation.GREATER_THAN, 0); // One client
@@ -51,11 +52,13 @@ public class HandoverMultichannel extends OdinApplication {
 		};
 		/* Before executing this line, make sure the agents declared in poolfile are started */	
 		registerSubscription(oes, cb);
+		log.info("Initialized");
 	}
 
 	@Override
 	public void run() {
 		/* When the application runs, you need some time to start the agents */
+		log.info("wait" + INTERVAL + " ms to initialize.");
 		try {
 			Thread.sleep(INTERVAL);
 		} catch (InterruptedException e){
@@ -74,8 +77,8 @@ public class HandoverMultichannel extends OdinApplication {
 	 */
 	private void handler (OdinEventSubscription oes, NotificationCallbackContext cntx) {
 		OdinClient client = getClientFromHwAddress(cntx.clientHwAddress);
-		String ap5 = "192.168.1.5";
-		String ap6 = "192.168.1.6";
+		String ap5 = "192.168.2.214";
+		String ap6 = "192.168.2.215";
 		InetAddress agentAddr5 = cntx.agent.getIpAddress();
 		InetAddress agentAddr6 = cntx.agent.getIpAddress();
 		InetAddress nextAgent = cntx.agent.getIpAddress();
@@ -113,7 +116,7 @@ public class HandoverMultichannel extends OdinApplication {
 		// The client is associated to Odin (it has an LVAP), but it does not have an associated agent
 		// If client hasn't been assigned an agent, associate it to the current AP
 		if (client.getLvap().getAgent() == null) {
-			log.info("HandoverMultichannel: client hasn't been asigned an agent: handing off client " + cntx.clientHwAddress
+			log.info("client hasn't been asigned an agent: handing off client " + cntx.clientHwAddress
 					+ " to agent " + nextAgent + " at " + System.currentTimeMillis());
 			handoffClientToAp(cntx.clientHwAddress, nextAgent);
 			updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
@@ -123,7 +126,7 @@ public class HandoverMultichannel extends OdinApplication {
 		// Check for out-of-range client
 		// a client has sent nothing during a certain time
 		if ((currentTimestamp - stats.lastHeard) > IDLE_CLIENT_THRESHOLD) {
-			log.info("HandoverMultichannel: client with MAC address " + cntx.clientHwAddress
+			log.info("client with MAC address " + cntx.clientHwAddress
 					+ " was idle longer than " + IDLE_CLIENT_THRESHOLD/1000 + " sec -> Reassociating it to agent " + nextAgent);
 			handoffClientToAp(cntx.clientHwAddress, nextAgent);
 			updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
@@ -143,7 +146,7 @@ public class HandoverMultichannel extends OdinApplication {
 			// I check if the strength is higher (THRESHOLD) than the last measurement stored the
 			// last time in the other AP
 			if (cntx.value >= stats.signalStrength + SIGNAL_STRENGTH_THRESHOLD) {
-				log.info("HandoverMultichannel: signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + " + SIGNAL_STRENGTH_THRESHOLD + " :" + "handing off client " + cntx.clientHwAddress
+				log.info("signal strengths: " + cntx.value + ">= " + stats.signalStrength + " + " + SIGNAL_STRENGTH_THRESHOLD + " :" + "handing off client " + cntx.clientHwAddress
 						+ " to agent " + nextAgent);
 				handoffClientToAp(cntx.clientHwAddress, nextAgent);
 				updateStatsWithReassignment (stats, cntx.value, currentTimestamp);
@@ -184,16 +187,16 @@ public class HandoverMultichannel extends OdinApplication {
 
 	private void assigmentChannel () {
 		for (InetAddress agentAddr: getAgents()) {
-			log.info("HandoverMultichannel: Agent IP: " + agentAddr.getHostAddress());
+			log.info("Agent IP: " + agentAddr.getHostAddress());
 			if (agentAddr.getHostAddress().equals("192.168.1.7")){
-				log.info ("HandoverMultichannel: Agent channel: " + getChannelFromAgent(agentAddr));
+				log.info ("Agent channel: " + getChannelFromAgent(agentAddr));
 				setChannelToAgent(agentAddr, 4);
-				log.info ("HandoverMultichannel: Agent channel: " + getChannelFromAgent(agentAddr));
+				log.info ("Agent channel: " + getChannelFromAgent(agentAddr));
 			}
 			if (agentAddr.getHostAddress().equals("192.168.1.8")){
-				log.info ("HandoverMultichannel: Agent channel: " + getChannelFromAgent(agentAddr));
+				log.info ("Agent channel: " + getChannelFromAgent(agentAddr));
 				setChannelToAgent(agentAddr, 10);
-				log.info ("HandoverMultichannel: Agent channel: " + getChannelFromAgent(agentAddr));
+				log.info ("Agent channel: " + getChannelFromAgent(agentAddr));
 			}
 		}
 	}*/
