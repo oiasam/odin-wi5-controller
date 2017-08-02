@@ -21,6 +21,7 @@ public class OdinEventSubscription {
 	public enum Relation {
 	    EQUALS,
 	    GREATER_THAN,
+	    GREATER_THAN_EQUALS,
 	    LESSER_THAN,
 	};
 	
