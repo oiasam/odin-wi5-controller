@@ -74,6 +74,7 @@ class OdinAgent implements IOdinAgent {
 	private static final String WRITE_HANDLER_CHANNEL = "channel";
 	private static final String WRITE_HANDLER_CHANNEL_SWITCH_ANNOUNCEMENT = "channel_switch_announcement";
 	private static final String WRITE_HANDLER_SCAN_CLIENT = "scan_client";
+	private static final String WRITE_HANDLER_SEND_DEAUTH = "send_deauth";
 	private static final String WRITE_HANDLER_SCAN_APS = "scan_APs";
 	private static final String WRITE_HANDLER_SEND_MEASUREMENT_BEACON = "send_measurement_beacon";
 	private static final String WRITE_HANDLER_SCANING_FLAGS = "scanning_flags";
@@ -606,7 +607,19 @@ class OdinAgent implements IOdinAgent {
 	    }
 	}
 
-
+	@Override
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(clientHwAddr);
+		sb.append(" ");
+		sb.append(bssid);
+		/*for (String ssid: ssidList) {
+			sb.append(" ");
+			sb.append(ssid);
+		}*/
+		invokeWriteHandler(WRITE_HANDLER_SEND_DEAUTH, sb.toString());
+	}
+	
 	@Override
 	public int scanClient(MACAddress clientHwAddr, int channel, int time) {
 		StringBuilder sb = new StringBuilder();

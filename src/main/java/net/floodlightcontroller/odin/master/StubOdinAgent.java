@@ -164,6 +164,12 @@ class StubOdinAgent implements IOdinAgent {
 	public int getTxPower() {
 		return txpower;
 	}
+
+	@Override
+	public void sendDeauth(MACAddress clientHwAddr, MACAddress bssid) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 
 
