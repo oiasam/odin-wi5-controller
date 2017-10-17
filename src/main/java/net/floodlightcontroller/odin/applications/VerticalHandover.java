@@ -19,39 +19,50 @@ public class VerticalHandover extends OdinApplication {
 
 	HashSet<OdinClient> clients;
 	
-	private final int INTERVAL = 60000; // time before running the application. This leaves you some time for starting the agents
+	private final int START_WAIT = 60000; // time before running the application. This leaves you some time for starting the agents
+	private final int INTERVAL = 120000; //periodic interval to remove all clients
 
 	@Override
 	public void run() {
 		OdinClient currentClient;
-		Lvap currentLvap;
-		IOdinAgent currentAgent;
+		//Lvap currentLvap;
+		//IOdinAgent currentAgent;
 				
 		/* When the application runs, you need some time to start the agents */
-		log.info("Wait " + INTERVAL + " ms to initialize.");
+		log.info("Wait " + START_WAIT + " ms to initialize.");
 		try {
-			Thread.sleep(INTERVAL);
+			Thread.sleep(START_WAIT);
 		} catch (InterruptedException e){
         		e.printStackTrace();
 		}
-		log.info("Remove all clients.");
-		/*all the clients Odin has heared (even non-connected) */				
-		clients = new HashSet<OdinClient>(getClients());
+		while(1==1){
+			log.info("Remove all clients.");
+			/*all the clients Odin has heared (even non-connected) */				
+			clients = new HashSet<OdinClient>(getClients());
+			
+			Iterator<OdinClient> it = clients.iterator();
 		
-		Iterator<OdinClient> it = clients.iterator();
-	
-		while(it.hasNext()){
-			currentClient = (OdinClient) it.next();
-			currentLvap = currentClient.getLvap();
-			currentAgent = currentLvap.getAgent();
-			
-			log.debug("Removing client " + currentClient.getMacAddress().toString() + " and LVAP " + currentLvap.getBssid().toString() + " from AP " + currentAgent.getIpAddress().toString());
-			
-			currentAgent.sendDeauth(currentClient.getMacAddress(), currentLvap.getBssid());
-			currentAgent.removeClientLvap(currentClient);
-			
+			while(it.hasNext()){
+				currentClient = (OdinClient) it.next();
+				//currentLvap = currentClient.getLvap();
+				//currentAgent = currentLvap.getAgent();
+				
+				//log.debug("Removing client " + currentClient.getMacAddress().toString() + " and LVAP " + currentLvap.getBssid().toString() + " from AP " + currentAgent.getIpAddress().toString());
+				log.debug("Removing client " + currentClient.getMacAddress().toString());
+				
+				//currentAgent.sendDeauth(currentClient.getMacAddress(), currentLvap.getBssid());
+				deauthClient(currentClient);
+				//currentAgent.removeClientLvap(currentClient);
+				
+			}
+			log.info("Wait " + START_WAIT + " ms to repeat removal of clients.");
+			try {
+				Thread.sleep(INTERVAL);
+			} catch (InterruptedException e){
+	        		e.printStackTrace();
+			}
 		}
-		
+			
 		
 	}
 	

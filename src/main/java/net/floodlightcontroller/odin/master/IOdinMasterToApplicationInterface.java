@@ -21,6 +21,7 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	void handoffClientToAp (String pool, MACAddress staHwAddr, InetAddress newApIpAddr);
 
+	void deauthClient(OdinClient client);
 	
 	/**
 	 * Get the list of clients currently registered with Odin
@@ -268,5 +269,8 @@ interface IOdinMasterToApplicationInterface {
 	 * @return TxPower in dBm
 	 */
 	int getTxPowerFromAgent (String pool, InetAddress agentAddr);
+
+
+	
 
 }

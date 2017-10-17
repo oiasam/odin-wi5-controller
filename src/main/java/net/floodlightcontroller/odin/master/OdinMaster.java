@@ -481,6 +481,8 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		}
 	}
 	
+	
+	
 	/**
 	 * Return Detector Ip Address
 	 *
@@ -502,6 +504,26 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	@Override
 	public void handoffClientToAp (String pool, final MACAddress clientHwAddr, final InetAddress newApIpAddr){
 		handoffClientToApInternal(pool, clientHwAddr, newApIpAddr);
+	}
+	
+	@Override
+	public void deauthClient(OdinClient client) {
+		MACAddress clientHwAddress = client.getMacAddress();
+		Lvap lvap = client.getLvap();		
+		IOdinAgent agent = lvap.getAgent();
+		OdinClient oc = clientManager.getClient(clientHwAddress);
+
+		if(agent == null)
+			return;
+
+		log.info("Actively deauthenticating and clearing Lvap " + clientHwAddress +
+		" from agent:" + agent.getIpAddress() + "");
+		agent.sendDeauth(clientHwAddress, lvap.getBssid());
+		
+		poolManager.removeClientPoolMapping(oc);
+		agent.removeClientLvap(oc);
+		clientManager.removeClient(clientHwAddress);
+		
 	}
 
 
@@ -933,6 +955,8 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		MACAddress bssid = poolManager.generateBssidForClient(clientHwAddr);
 		agentManager.getAgent(agentAddr).sendChannelSwitch(clientHwAddr, bssid, lvapSsids, channel);
 	}
+	
+	
 	
 	/**
 	 * Scanning for a client in a specific agent (AP)
@@ -1535,7 +1559,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 						//log.info("Clearing Lvap " + client.getMacAddress() +
 						//		" from agent:" + agent.getIpAddress() + " due to inactivity");
 						//poolManager.removeClientPoolMapping(client);
-						//agent.removeClientLvap(client);
+						//agent.(client);
 						//clientManager.removeClient(client.getMacAddress());
 					}
 				}
