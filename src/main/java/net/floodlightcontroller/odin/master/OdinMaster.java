@@ -211,8 +211,6 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 		updateAgentLastHeard(odinAgentAddr);
 
-		log.debug("Probe request from "+clientHwAddress.toString());
-
 		//Check whether the client is blacklisted.
 		Long blackListTime = clientManager.getClientBL(clientHwAddress);
 		if (blackListTime != null){
@@ -522,7 +520,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	}
 	
 	@Override
-	public void deauthClient(OdinClient client, Long blackListTime) {
+	public void deauthClient(OdinClient client) {
 		MACAddress clientHwAddress = client.getMacAddress();
 		Lvap lvap = client.getLvap();		
 		IOdinAgent agent = lvap.getAgent();
@@ -533,11 +531,6 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 		log.info("Actively deauthenticating and clearing Lvap " + clientHwAddress +
 		" from agent:" + agent.getIpAddress() + "");
-
-		// Add to blacklist if appropriate
-		if (blackListTime != null){
-			clientManager.addClientBL(clientHwAddress, blackListTime);
-		}
 
 		agent.sendDeauth(clientHwAddress, lvap.getBssid());
 		
@@ -571,7 +564,11 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 		return (client != null && poolManager.getPoolForClient(client).equals(pool)) ? client : null;
 	}
 
-	
+	@Override
+	public Map<MACAddress, Long> getClientBlackList() {
+		return clientManager.getClientsBL();
+	}
+
 	/**
 	 * Retreive LastHeard from the agent
 	 * 

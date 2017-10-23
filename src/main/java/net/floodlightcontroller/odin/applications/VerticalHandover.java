@@ -3,11 +3,13 @@ package net.floodlightcontroller.odin.applications;
 
 import net.floodlightcontroller.odin.master.OdinApplication;
 import net.floodlightcontroller.odin.master.OdinClient;
+import net.floodlightcontroller.util.MACAddress;
 import net.floodlightcontroller.odin.master.IOdinAgent;
 import net.floodlightcontroller.odin.master.Lvap;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ public class VerticalHandover extends OdinApplication {
 	@Override
 	public void run() {
 		OdinClient currentClient;
+		Map<MACAddress, Long> clientBlacklist = getClientBlackList();
 		//Lvap currentLvap;
 		//IOdinAgent currentAgent;
 				
@@ -50,7 +53,10 @@ public class VerticalHandover extends OdinApplication {
 				long _blacklist = _now + BLACKLIST*1000000;
 				log.debug("Removing client " + currentClient.getMacAddress().toString()+", blacklisting from "+_now+" ns until "+_blacklist+" ns");
 
-				deauthClient(currentClient, _blacklist);
+				// Add to blacklist if appropriate
+				clientBlacklist.put(currentClient.getMacAddress(), _blacklist);
+
+				deauthClient(currentClient);
 			}
 
 			log.info("Wait " + INTERVAL + " ms to repeat removal of clients.");

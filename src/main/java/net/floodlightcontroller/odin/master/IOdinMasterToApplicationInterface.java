@@ -21,8 +21,8 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	void handoffClientToAp (String pool, MACAddress staHwAddr, InetAddress newApIpAddr);
 
-	void deauthClient(OdinClient client, Long blackListTime);
-	
+	void deauthClient(OdinClient client);
+
 	/**
 	 * Get the list of clients currently registered with Odin
 	 * 
@@ -39,6 +39,8 @@ interface IOdinMasterToApplicationInterface {
 	 */
 	OdinClient getClientFromHwAddress (String pool, MACAddress clientHwAddress);
 	
+	Map<MACAddress, Long> getClientBlackList ();
+
 	long getLastHeardFromAgent (String pool, InetAddress agentAddr);
 
 	/**

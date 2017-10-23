@@ -63,8 +63,8 @@ public abstract class OdinApplication implements Runnable {
 		odinApplicationInterfaceToMaster.handoffClientToAp(pool, staHwAddr, newApIpAddr);
 	}
 
-	protected final void deauthClient (OdinClient client, Long blackListTime){
-		odinApplicationInterfaceToMaster.deauthClient(client, blackListTime);
+	protected final void deauthClient (OdinClient client){
+		odinApplicationInterfaceToMaster.deauthClient(client);
 	}
 	
 	/**
@@ -76,6 +76,9 @@ public abstract class OdinApplication implements Runnable {
 		return odinApplicationInterfaceToMaster.getClients(pool);		
 	}
 	
+	protected final Map<MACAddress, Long> getClientBlackList () {
+		return odinApplicationInterfaceToMaster.getClientBlackList();
+	}
 	
 	/**
 	 * Get the OdinClient type from the client's MACAddress
