@@ -59,6 +59,16 @@ public class VerticalHandover extends OdinApplication {
 				deauthClient(currentClient);
 			}
 
+			//Erase expired blacklist entries
+			Iterator<MACAddress> itBL = clientBlacklist.keySet().iterator();
+			while (itBL.hasNext()){
+				MACAddress currentMac = itBL.next();
+				long blackListTime = clientBlacklist.get(currentMac);
+				if(blackListTime <= System.nanoTime()){
+					clientBlacklist.remove(currentMac);
+				}
+			}
+
 			log.info("Wait " + INTERVAL + " ms to repeat removal of clients.");
 			try {
 				Thread.sleep(INTERVAL);
