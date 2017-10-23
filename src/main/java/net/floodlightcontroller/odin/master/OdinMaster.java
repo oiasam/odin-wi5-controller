@@ -211,6 +211,21 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 		updateAgentLastHeard(odinAgentAddr);
 
+		log.debug("Probe request from "+clientHwAddress.toString());
+
+		//Check whether the client is blacklisted.
+		Long blackListTime = clientManager.getClientBL(clientHwAddress);
+		if (blackListTime != null){
+			Long systemTime = System.nanoTime();
+			if(blackListTime > systemTime){
+				log.debug("Probe request from "+clientHwAddress.toString()+" ignored due to BlackList until t="+blackListTime+" ns (now="+systemTime+" ns)");
+				return;
+			}
+			else{
+				clientManager.removeClientBL(clientHwAddress);
+			}
+		}
+
 		/*
 		 * If clients perform an active scan, generate
 		 * probe responses without spawning lvaps
@@ -507,7 +522,7 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 	}
 	
 	@Override
-	public void deauthClient(OdinClient client) {
+	public void deauthClient(OdinClient client, Long blackListTime) {
 		MACAddress clientHwAddress = client.getMacAddress();
 		Lvap lvap = client.getLvap();		
 		IOdinAgent agent = lvap.getAgent();
@@ -518,12 +533,17 @@ public class OdinMaster implements IFloodlightModule, IOFSwitchListener, IOdinMa
 
 		log.info("Actively deauthenticating and clearing Lvap " + clientHwAddress +
 		" from agent:" + agent.getIpAddress() + "");
+
+		// Add to blacklist if appropriate
+		if (blackListTime != null){
+			clientManager.addClientBL(clientHwAddress, blackListTime);
+		}
+
 		agent.sendDeauth(clientHwAddress, lvap.getBssid());
 		
 		poolManager.removeClientPoolMapping(oc);
 		agent.removeClientLvap(oc);
 		clientManager.removeClient(clientHwAddress);
-		
 	}
 
 

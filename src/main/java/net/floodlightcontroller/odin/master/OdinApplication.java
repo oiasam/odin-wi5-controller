@@ -63,8 +63,8 @@ public abstract class OdinApplication implements Runnable {
 		odinApplicationInterfaceToMaster.handoffClientToAp(pool, staHwAddr, newApIpAddr);
 	}
 
-	protected final void deauthClient (OdinClient client){
-		odinApplicationInterfaceToMaster.deauthClient(client);
+	protected final void deauthClient (OdinClient client, Long blackListTime){
+		odinApplicationInterfaceToMaster.deauthClient(client, blackListTime);
 	}
 	
 	/**

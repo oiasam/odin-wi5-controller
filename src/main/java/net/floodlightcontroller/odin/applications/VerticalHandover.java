@@ -19,8 +19,9 @@ public class VerticalHandover extends OdinApplication {
 
 	HashSet<OdinClient> clients;
 	
-	private final int START_WAIT = 60000; // time before running the application. This leaves you some time for starting the agents
-	private final int INTERVAL = 120000; //periodic interval to remove all clients
+	private final int START_WAIT = 120000; // ms time before running the application. This leaves you some time for starting the agents
+	private final int INTERVAL = 120000; // ms periodic interval to remove all clients
+	private final long BLACKLIST = 30000; // ms time to blacklist client before it may reconnect
 
 	@Override
 	public void run() {
@@ -44,27 +45,20 @@ public class VerticalHandover extends OdinApplication {
 		
 			while(it.hasNext()){
 				currentClient = (OdinClient) it.next();
-				//currentLvap = currentClient.getLvap();
-				//currentAgent = currentLvap.getAgent();
-				
-				//log.debug("Removing client " + currentClient.getMacAddress().toString() + " and LVAP " + currentLvap.getBssid().toString() + " from AP " + currentAgent.getIpAddress().toString());
-				log.debug("Removing client " + currentClient.getMacAddress().toString());
-				
-				//currentAgent.sendDeauth(currentClient.getMacAddress(), currentLvap.getBssid());
-				deauthClient(currentClient);
-				//currentAgent.removeClientLvap(currentClient);
-				
+
+				long _now = System.nanoTime();
+				long _blacklist = _now + BLACKLIST*1000000;
+				log.debug("Removing client " + currentClient.getMacAddress().toString()+", blacklisting from "+_now+" ns until "+_blacklist+" ns");
+
+				deauthClient(currentClient, _blacklist);
 			}
-			log.info("Wait " + START_WAIT + " ms to repeat removal of clients.");
+
+			log.info("Wait " + INTERVAL + " ms to repeat removal of clients.");
 			try {
 				Thread.sleep(INTERVAL);
 			} catch (InterruptedException e){
 	        		e.printStackTrace();
 			}
 		}
-			
-		
 	}
-	
-
 }
