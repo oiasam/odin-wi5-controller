@@ -47,7 +47,7 @@ public class VerticalHandoverManual extends OdinApplication {
 		}
 		log.info("Manually block / unblock clients");
 		while(1==1){
-			/*all the clients Odin has heard (even non-connected) */				
+			/*all the clients Odin has heard (even non-connected) */
 			clients = new HashSet<OdinClient>(getClients());
 			
 			Iterator<OdinClient> it = clients.iterator();

@@ -41,7 +41,7 @@ public class VerticalHandover extends OdinApplication {
 		}
 		while(1==1){
 			log.info("Remove all clients.");
-			/*all the clients Odin has heared (even non-connected) */				
+			/*all the clients Odin has heard (even non-connected) */
 			clients = new HashSet<OdinClient>(getClients());
 			
 			Iterator<OdinClient> it = clients.iterator();
