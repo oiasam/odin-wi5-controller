@@ -20,8 +20,12 @@ http://www.openflowhub.org/display/Floodlight/Floodlight+Home
 
 Installation
 ------------
+Clone the repo
 `git clone https://github.com/Wi5/odin-wi5-controller`
-To build the Odin Controller (which is built as an application on top of Floodlight), do the following:
+
+To build the Odin Controller, run the following:
   `$: sudo apt install default-jdk`
+  
   `$: cd odin-wi5-controller`
+  
   `$: ant`
