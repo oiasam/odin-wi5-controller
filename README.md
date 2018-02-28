@@ -32,3 +32,7 @@ To build the Odin Controller, run the following:
   `$: cd odin-wi5-controller`
   
   `$: ant`
+  
+  After you configure the poolFile, run the controller as follows:
+  
+  `~/odin-controller# java -jar ./target/floodlight.jar -cf ./src/main/resources/floodlightdefault.properties`
