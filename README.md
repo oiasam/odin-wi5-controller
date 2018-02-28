@@ -17,3 +17,11 @@ University. It is available under the Apache 2.0 license.
 For documentation, forums, issue tracking and more visit:
 
 http://www.openflowhub.org/display/Floodlight/Floodlight+Home
+
+Installation
+------------
+`git clone https://github.com/Wi5/odin-wi5-controller`
+To build the Odin Controller (which is built as an application on top of Floodlight), do the following:
+  `$: sudo apt install default-jdk`
+  `$: cd odin-wi5-controller`
+  `$: ant`
