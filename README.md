@@ -27,11 +27,11 @@ Clone the repo
 
 To build the Odin Controller, run the following:
 
-  `$: sudo apt install default-jdk`
+  `sudo apt install default-jdk`
   
-  `$: cd odin-wi5-controller`
+  `cd odin-wi5-controller`
   
-  `$: ant`
+  `ant`
   
   After you configure the poolFile, run the controller as follows:
   
